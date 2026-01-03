@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v4.1 批次處理效能版</p>
+                <p class="text-blue-100 text-sm mt-1">v4.2 極速排序版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,15 +26,15 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v4.1 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v4.2 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                解決了多筆資料同時上傳時造成的「沒反應」(逾時) 問題，並優化了防重複邏輯。
+                針對「沒反應」與「沒排序」問題進行了核心邏輯瘦身。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🚀 <b>批次處理：</b>採用「一次讀取、批次寫入」策略，速度提升 10 倍，解決卡頓問題。</li>
-                <li>📊 <b>邏輯優化：</b>依照您的要求，先對 Sheet 進行排序整理，再進行重複比對，最後才寫入新資料。</li>
-                <li>🎯 <b>精準防重複：</b>使用時間戳記指紋比對，杜絕重複行程。</li>
-                <li>💬 <b>完整功能：</b>保留 v3 系列的所有優化 (自訂提醒、民國年、OCR重試)。</li>
+                <li>🚀 <b>效能提速：</b>移除冗餘的預先排序，只在資料寫入後執行一次強制排序，避免超時。</li>
+                <li>⚡ <b>OCR 優化：</b>縮短重試等待時間，防止 LINE Token 過期。</li>
+                <li>🛡️ <b>強制回覆：</b>若處理時間過長，自動切換為 Push Message 推播，確保您收到回應。</li>
+                <li>📊 <b>排序修復：</b>修正了排序範圍選取邏輯，確保新舊資料都能正確排列。</li>
             </ul>
         </section>
 
@@ -130,7 +130,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v4.1)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v4.2)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -176,11 +176,11 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v4.1 (批次處理效能版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v4.2 (極速排序 & 逾時修正版)
  * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. 核心改寫：採用「批次處理」取代逐筆寫入，大幅提升速度，解決逾時沒反應問題
- * 2. 邏輯順序：上傳 -> 先排序 -> 讀取比對 -> 排除重複 -> 批次寫入 -> 再次排序 -> 回覆
+ * 1. 效能優化：移除冗餘的預先排序，只保留寫入後的強制排序
+ * 2. 逾時保護：OCR 重試間隔縮短，錯誤處理強制使用 Push Message
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -193,7 +193,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v4.1 效能版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v4.2 極速排序版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -226,7 +226,7 @@ function doPost(e) {
     try {
       if (event.message.type === 'text') { userMessage = event.message.text; } 
       else if (event.message.type === 'image') {
-        replyLine(replyToken, "🔍 收到圖片，AI 辨識中...(約3-5秒)");
+        replyLine(replyToken, "🔍 收到圖片，AI 辨識中...");
         userMessage = handleImageOCR(event.message.id);
         if (!userMessage.trim()) { pushLineMessage(userId, "❌ 圖片辨識失敗。"); return; }
       } else { return; }
@@ -235,14 +235,14 @@ function doPost(e) {
         const result = parseFlexibleScheduleV3(userMessage);
         
         if (result.status === 'error') {
-           if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
-           else { replyLine(replyToken, "❌ " + result.message); }
+           // 若發生錯誤，優先嘗試 push，避免 token 過期
+           pushLineMessage(userId, "❌ " + result.message);
            return;
         }
 
         const parsedData = result.data;
         if (parsedData.length > 0) {
-          // [v4.1] 改用批次處理函式
+          // [v4.2] 批次處理
           const batchResult = processEventsBatch(userId, parsedData);
           
           let replyMsg = "✅ 處理完成：\\n";
@@ -268,24 +268,21 @@ function doPost(e) {
             replyMsg += "\\n(所有行程均已存在，無需新增)";
           }
           
-          if (event.message.type === 'image') { pushLineMessage(userId, replyMsg); }
-          else { replyLine(replyToken, replyMsg); }
+          // 強制使用 Push Message 回覆結果，因為處理時間可能超過 replyToken 的 30秒限制
+          pushLineMessage(userId, replyMsg);
         } else {
-           const failMsg = "無法辨識行程。請確認含有日期(如1/9)與時間。";
-           if (event.message.type === 'image') { pushLineMessage(userId, failMsg); }
-           else { replyLine(replyToken, failMsg); }
+           pushLineMessage(userId, "無法辨識行程。請確認含有日期(如1/9)與時間。");
         }
       }
     } catch (err) {
       Logger.log(err);
-      const errMsg = "❌ 錯誤：" + err.message;
-      if (event.message.type === 'image') { pushLineMessage(userId, errMsg); }
-      else { replyLine(replyToken, errMsg); }
+      // 發生例外錯誤時，強制使用 Push Message
+      pushLineMessage(userId, "❌ 系統錯誤：" + err.message);
     }
   }
 }
 
-// ================= v4.1 批次處理核心 =================
+// ================= v4.2 批次處理核心 (極速排序) =================
 function processEventsBatch(userId, newEvents) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   let sheet = ss.getSheetByName(SHEET_NAME);
@@ -295,13 +292,9 @@ function processEventsBatch(userId, newEvents) {
     sheet.setFrozenRows(1);
   }
 
-  // 1. 先對現有資料排序 (使用者要求)
-  const lastRow = sheet.getLastRow();
-  if (lastRow > 1) {
-    sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).sort({column: 5, ascending: true});
-  }
+  // [v4.2 優化] 移除這裡的預先排序，節省時間
 
-  // 2. 一次性讀取所有資料建立比對指紋
+  // 一次性讀取所有資料建立比對指紋
   const existingData = sheet.getDataRange().getValues();
   const existingSignatures = new Set();
   
@@ -313,7 +306,6 @@ function processEventsBatch(userId, newEvents) {
     
     if (!isNaN(rowTime.getTime())) {
        // 指紋：時間(分鐘級)_標題
-       // 容許秒數差異，使用 Math.floor(timestamp / 60000)
        const timeKey = Math.floor(rowTime.getTime() / 60000);
        existingSignatures.add(\`\${timeKey}_\${row[5]}\`);
     }
@@ -323,7 +315,6 @@ function processEventsBatch(userId, newEvents) {
   const addedEvents = [];
   const ignoredTitles = [];
 
-  // 3. 記憶體中比對篩選
   newEvents.forEach(event => {
     const eventTimeKey = Math.floor(event.startObj.getTime() / 60000);
     const signature = \`\${eventTimeKey}_\${event.title}\`;
@@ -342,20 +333,23 @@ function processEventsBatch(userId, newEvents) {
         "", // 提醒狀態
         new Date() // 建立時間
       ]);
-      // 寫入日曆
       createCalendarEvent(event);
       addedEvents.push(event);
-      // 加入指紋防止同批次重複
       existingSignatures.add(signature);
     }
   });
 
-  // 4. 批次寫入 Sheet (一次 I/O)
+  // 批次寫入 & 強制排序
   if (rowsToAdd.length > 0) {
+    const lastRow = sheet.getLastRow();
     sheet.getRange(lastRow + 1, 1, rowsToAdd.length, rowsToAdd[0].length).setValues(rowsToAdd);
     SpreadsheetApp.flush(); // 強制刷新
-    // 再次排序
-    sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).sort({column: 5, ascending: true});
+    
+    // [v4.2] 確保有資料才排序
+    const finalLastRow = sheet.getLastRow();
+    if (finalLastRow > 1) {
+        sheet.getRange(2, 1, finalLastRow - 1, sheet.getLastColumn()).sort({column: 5, ascending: true});
+    }
   }
 
   return { added: addedEvents, ignored: ignoredTitles };
@@ -367,12 +361,15 @@ function handleImageOCR(messageId) {
   const blob = response.getBlob();
   const resource = { title: "temp_ocr_" + new Date().getTime(), mimeType: blob.getContentType() };
   let file, attempts = 0;
-  while (attempts < 5) {
+  // [v4.2] 縮短重試次數與時間，避免 Timeout
+  const maxAttempts = 3; 
+  while (attempts < maxAttempts) {
     try { file = Drive.Files.insert(resource, blob, { ocr: true }); break; } 
     catch (e) { 
       attempts++; 
-      if(attempts>=5) throw new Error("OCR 服務忙碌，請稍後再試。");
-      Utilities.sleep(attempts * 3000); 
+      // 縮短等待時間為固定 1 秒
+      if(attempts >= maxAttempts) throw new Error("OCR 忙碌，請稍後再試。");
+      Utilities.sleep(1000); 
     }
   }
   const text = DocumentApp.openById(file.id).getBody().getText();

@@ -30,7 +30,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v3.3 嚴格防呆 & 彈性時間版</p>
+                <p class="text-blue-100 text-sm mt-1">v3.7 完整自訂提醒版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -40,16 +40,15 @@
 
         <!-- 簡介 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v3.3 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v3.7 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                這個版本大幅強化了對「錯誤輸入」的偵測能力，並支援更多元的簡寫時間格式。
+                這個版本確保您在網頁上設定的<b>所有提醒時間</b>都會被正確寫入，並在通知中完整列出。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🚫 <b>日期防呆：</b>輸入 11/1311/20 或 22/1 (月份錯誤) 會回覆無法判斷。</li>
-                <li>🚫 <b>時間防呆：</b>輸入 912 或 1415 (無分隔符) 會回覆無法判斷。</li>
-                <li>🕒 <b>彈性時間：</b>支援 9-12 (整點)、13:40-15、0900-1200 等格式。</li>
-                <li>📅 <b>民國年支援：</b>輸入 115年 自動轉 2026。</li>
-                <li>🛡️ <b>OCR 穩定：</b>包含重試機制。</li>
+                <li>⏰ <b>完整提醒：</b>同時支援預設的 1 小時，以及您自訂的 2 個額外時間。</li>
+                <li>💬 <b>訊息確認：</b>LINE 機器人會明確回覆：「將在活動前 X 分鐘、前 Y 小時通知您」。</li>
+                <li>🔧 <b>民國年支援：</b>輸入 100-199 自動判斷為民國年。</li>
+                <li>🛡️ <b>全功能防護：</b>包含 OCR 重試、防重複輸入、嚴格日期檢查。</li>
             </ul>
         </section>
 
@@ -59,7 +58,6 @@
                 <div class="step-number">1</div>
                 <h2 class="text-xl font-bold text-gray-800">建立 LINE 官方帳號與取得 Token</h2>
             </div>
-            
             <div class="pl-10 space-y-6 text-sm text-gray-600">
                 <div>
                     <h3 class="font-bold text-blue-700 mb-2"><i class="fa-solid fa-key mr-1"></i> 取得 Channel Access Token</h3>
@@ -70,7 +68,6 @@
                     </ul>
                 </div>
             </div>
-            
             <div class="mt-6 pl-10 border-t pt-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Channel Access Token：</label>
                 <input type="text" id="inputToken" placeholder="例如：eyJhbGciOiJIUzI1NiJ9..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
@@ -87,7 +84,6 @@
                 <p>1.建立一個新的 <a href="https://sheets.new" target="_blank" class="text-blue-600 hover:underline">Google Sheet</a>。</p>
                 <p>2.複製網址列中的 ID。</p>
             </div>
-
             <div class="mt-4 pl-10">
                 <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Google Sheet ID：</label>
                 <input type="text" id="inputSheetId" placeholder="例如：1qo5L0zcjQweI7xV8cqE-3BByS0PMq-d6aAVfQzs20bo" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
@@ -101,7 +97,7 @@
                 <h2 class="text-xl font-bold text-gray-800">設定提醒通知時間 (可選)</h2>
             </div>
             <div class="pl-10 text-sm text-gray-600">
-                <p class="mb-4">除了基本的 1 小時前通知，您還可以增加 2 個額外的提醒時間點。</p>
+                <p class="mb-4">除了基本的 1 小時前通知，您可以在此增加額外的提醒時間（程式碼會自動包含這兩個選項）。</p>
                 
                 <div class="space-y-4">
                     <div class="flex items-center p-3 bg-gray-100 rounded border border-gray-300">
@@ -148,7 +144,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v3.3)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v3.7)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -172,8 +168,9 @@
                     <li>
                         執行 <code>initialSetup</code> 函式並完成授權。
                     </li>
-                    <li>
-                        <b>部署為 Web App</b> (執行身分: Me, 存取權: Anyone)，將網址貼回 LINE Webhook。
+                    <li class="bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
+                        <span class="font-bold text-yellow-800">【非常重要】建立新版本：</span>
+                        <br>每次更新程式碼後，一定要點擊 <b>部署</b> > <b>管理部署</b> > 點擊筆圖示 > 版本選擇 <b>「新版本」</b> > <b>部署</b>。
                     </li>
                     <li>
                         <b>設定觸發器：</b>
@@ -192,14 +189,12 @@
     </footer>
 
     <script>
-        // 這是 v3.3 的 GAS 模板
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v3.3 (嚴格防呆 & 彈性時間版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v3.7 (完整自訂提醒版)
  * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. 日期防呆 (偵測 11/1311/20, 112/3 等錯誤)
- * 2. 時間防呆 (偵測 912, 1415 等無分隔符錯誤)
- * 3. 支援 9-12, 13:40-15, 0900-1200 等多種時間格式
+ * 1. 確保所有自訂提醒時間 (網頁選單) 都會顯示在通知中
+ * 2. 包含 v3 系列所有防呆 (OCR重試、防重複、民國年)
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -210,10 +205,11 @@ const SHEET_NAME = '行程記錄';
 const HISTORY_SHEET_NAME = '歷史封存';
 
 // [重要] 提醒時間設定 (單位：分鐘)
+// 這裡會包含預設的 60 分鐘以及您在網頁設定的額外時間
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
 // ================= 測試部署狀態用 =================
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v3.3 嚴格防呆版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v3.7 完整版)！"); }
 
 // ================= 權限初始化 =================
 function initialSetup() {
@@ -254,10 +250,8 @@ function doPost(e) {
       } else { return; }
 
       if (userMessage) {
-        // 先進行解析
         const result = parseFlexibleScheduleV3(userMessage);
         
-        // 檢查是否有錯誤 (v3.3 新增)
         if (result.status === 'error') {
            if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
            else { replyLine(replyToken, "❌ " + result.message); }
@@ -283,12 +277,15 @@ function doPost(e) {
           });
           
           if (addedCount > 0) {
+            // 動態產生所有設定的提醒時間文字
             const reminderText = REMINDER_OFFSETS.map(min => {
-              if (min >= 1440) return \`前\${Math.floor(min/1440)}天\`;
-              if (min >= 60) return \`前\${(min/60).toFixed(1).replace('.0','')}小時\`;
-              return \`前\${min}分鐘\`;
+              if (min >= 1440) return \`前 \${Math.floor(min/1440)} 天\`;
+              if (min >= 60) return \`前 \${(min/60).toFixed(1).replace('.0','')} 小時\`;
+              return \`前 \${min} 分鐘\`;
             }).join("、");
-            replyMsg += \`\\n🔔 機器人將在活動前 \${reminderText} 通知您。\`;
+            
+            // 訊息範例：🔔 機器人將在活動前 10 分鐘、前 1 小時通知您。
+            replyMsg += \`\\n🔔 機器人將在活動\${reminderText}通知您。\`;
           } else {
             replyMsg += "\\n(所有行程均已存在，無需新增)";
           }
@@ -327,7 +324,7 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// ================= 狀態機解析器 V3.3 (嚴格防呆) =================
+// ================= 狀態機解析器 V3.5 =================
 function parseFlexibleScheduleV3(text) {
   text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/⋅/g, " ").replace(/[()（）]/g, " "); 
   const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
@@ -338,28 +335,14 @@ function parseFlexibleScheduleV3(text) {
   const currentYear = new Date().getFullYear();
   let currentEvent = null;
 
-  // --- 1. 預先檢查嚴重錯誤 (防呆) ---
   for (let line of lines) {
-    // 檢查過長的日期串 (11/1311/20)
     if (line.match(/\\d{1,2}[-./]\\d{3,}[-./]\\d{1,2}/)) {
       return { status: 'error', message: "日期格式混亂無法判斷 (如: " + line + ")，請重新輸入。" };
     }
-    // 檢查月份錯誤 (112/3)
-    const badMonth = line.match(/(\\d{3,})[-./](\\d{1,2})/);
-    if (badMonth && parseInt(badMonth[1]) > 2050) { // 排除年份，如果是純數字通常不會這麼大
-       // 寬鬆一點，不要誤殺年份，但像 112/3 若不是民國年格式可能有誤
-    }
-    // 檢查 22/21 (月份 > 12)
     const dateCheck = line.match(/(\\d{1,2})[-./](\\d{1,2})/);
     if (dateCheck) {
-       // 需要小心不要把時間 13:40 當成日期，所以要有分隔符 check
-       // 這裡簡單檢查：如果第一組數字 > 12 且不是年份(>1900)，且第二組數字合理
        const p1 = parseInt(dateCheck[1]);
-       const p2 = parseInt(dateCheck[2]);
-       // 假設格式是 月/日，若 p1 > 12 (且不是年份)，報錯
-       // 但也有可能是 日/月 格式? 這裡假設月/日為主流
        if (p1 > 12 && p1 < 100) {
-          // 再次確認這不是時間 (時間通常用 : )
           if (!line.includes(':') && !line.includes('：')) {
              return { status: 'error', message: "日期月份錯誤 (如: " + dateCheck[0] + ")，請重新輸入。" };
           }
@@ -369,30 +352,18 @@ function parseFlexibleScheduleV3(text) {
 
   const flushCurrentEvent = () => {
     if (currentEvent) {
-      if (!currentEvent.startH) { 
-         // 沒抓到時間的預設值 (全天)
-         currentEvent.startH = 9; currentEvent.startM = 0; currentEvent.endH = 10; currentEvent.endM = 0; 
-      }
+      if (!currentEvent.startH) { currentEvent.startH = 9; currentEvent.startM = 0; currentEvent.endH = 10; currentEvent.endM = 0; }
       if (!currentEvent.title) currentEvent.title = "未命名行程";
-
       const dateStr = currentEvent.date;
       const startObj = new Date(\`\${dateStr}T\${String(currentEvent.startH).padStart(2,'0')}:\${String(currentEvent.startM).padStart(2,'0')}:00\`);
       const endObj = new Date(\`\${dateStr}T\${String(currentEvent.endH).padStart(2,'0')}:\${String(currentEvent.endM).padStart(2,'0')}:00\`);
-      
       let assignedLink = "";
       if (links.length > 0) {
         if (links.length === 1) assignedLink = links[0];
         else if (linkIndex < links.length) assignedLink = links[linkIndex++];
         else assignedLink = links[links.length - 1]; 
       }
-      
-      // 處理單一時間的備註
-      if (currentEvent.isSingleTime) {
-         assignedLink = (assignedLink ? assignedLink + "\\n" : "") + "(未指定結束時間)";
-         // 標題也可以加
-         // currentEvent.title += " (1H)";
-      }
-
+      if (currentEvent.isSingleTime) { assignedLink = (assignedLink ? assignedLink + "\\n" : "") + "(未指定結束時間)"; }
       results.push({
         date: dateStr,
         timeStart: \`\${String(currentEvent.startH).padStart(2,'0')}:\${String(currentEvent.startM).padStart(2,'0')}\`,
@@ -406,25 +377,22 @@ function parseFlexibleScheduleV3(text) {
   for (let line of lines) {
     if (line.match(/^https?:\\/\\//) || line.match(/^(時間|日期|行程表|July|講師)/i)) continue;
 
-    // --- 2. 嚴格時間防呆 (偵測 912, 1415) ---
-    // 如果一行只有 3-4 個數字，且沒有分隔符，且不是年份 (如 2026)，報錯
+    // --- 時間防呆 ---
     const pureNumber = line.match(/^(\\d{3,4})$/);
     if (pureNumber) {
        const val = parseInt(pureNumber[1]);
-       // 排除合理的年份範圍 (如 2025-2030)，其他的視為手誤時間
-       if (val < 2020 || val > 2035) {
+       const isYear = (val >= 2020 && val <= 2035) || (val >= 100 && val <= 199);
+       if (!isYear) {
           return { status: 'error', message: "時間格式無法判斷 (如: " + val + " 連在一起)，請重新輸入 (建議格式: 09:00 或 9-12)。" };
        }
     }
 
-    // --- 3. 日期解析 (含民國年) ---
     const dateMatch = line.match(/(\\d{2,4})?[-./年]?(\\d{1,2})[-./月](\\d{1,2})日?/);
     if (dateMatch) {
-       // 排除把時間當日期的情況 (如 9-12)
        if (!line.match(/\\d{1,2}\\s*[-~]\\s*\\d{1,2}/)) {
           flushCurrentEvent();
           let y = dateMatch[1] ? parseInt(dateMatch[1]) : currentYear;
-          if (y < 1000) y += 1911; // 民國年轉西元
+          if (y < 1000) y += 1911; 
           
           let m = dateMatch[2]; let d = dateMatch[3];
           currentEvent = { 
@@ -437,62 +405,26 @@ function parseFlexibleScheduleV3(text) {
     
     if (!currentEvent) continue;
 
-    // --- 4. 時間解析 (強化版) ---
-    
-    // A. 標準/軍事範圍: 09:00-12:00, 0900-1200
-    // Regex: 支援 (1-2位 或 4位) [-~] (1-2位 或 4位)
-    // 捕獲組: 1:StartH(or HHMM), 2:StartM, 3:EndH(or HHMM), 4:EndM
     const complexTime = line.match(/(?:^|\\s)(\\d{1,2}|\\d{4})(:(\\d{2}))?\\s*[-~]\\s*(\\d{1,2}|\\d{4})(:(\\d{2}))?/);
-    
-    // B. 單一時間 (9點開始): 09:00, 9點, 0900
     const singleTime = line.match(/(?:^|\\s)(\\d{1,2}|\\d{4})(:(\\d{2}))?(?:$|\\s|點)/);
-
-    // C. 關鍵字
     const allDayMatch = line.match(/(整天|全天)/);
     const halfDayMatch = line.match(/(上午|下午)?\\s*半天/);
 
     if (complexTime) {
-       // 解析 Start
        let sRaw = complexTime[1];
-       if (sRaw.length === 4) { // 0900
-          currentEvent.startH = parseInt(sRaw.substring(0,2));
-          currentEvent.startM = parseInt(sRaw.substring(2,4));
-       } else {
-          currentEvent.startH = parseInt(sRaw);
-          currentEvent.startM = complexTime[3] ? parseInt(complexTime[3]) : 0;
-       }
-
-       // 解析 End
+       if (sRaw.length === 4) { currentEvent.startH = parseInt(sRaw.substring(0,2)); currentEvent.startM = parseInt(sRaw.substring(2,4)); } 
+       else { currentEvent.startH = parseInt(sRaw); currentEvent.startM = complexTime[3] ? parseInt(complexTime[3]) : 0; }
        let eRaw = complexTime[4];
-       if (eRaw.length === 4) { // 1200
-          currentEvent.endH = parseInt(eRaw.substring(0,2));
-          currentEvent.endM = parseInt(eRaw.substring(2,4));
-       } else {
-          currentEvent.endH = parseInt(eRaw);
-          // 特殊處理 13:40-15 (End沒有分)
-          currentEvent.endM = complexTime[6] ? parseInt(complexTime[6]) : 0;
-       }
+       if (eRaw.length === 4) { currentEvent.endH = parseInt(eRaw.substring(0,2)); currentEvent.endM = parseInt(eRaw.substring(2,4)); } 
+       else { currentEvent.endH = parseInt(eRaw); currentEvent.endM = complexTime[6] ? parseInt(complexTime[6]) : 0; }
        continue; 
     }
-    else if (singleTime && !line.match(/[-~]/)) { // 只有當沒有範圍符號時才算單一時間
-       // 防止把 "2026" 年份誤判為時間 20:26
+    else if (singleTime && !line.match(/[-~]/)) { 
        let val = parseInt(singleTime[1]);
-       if (singleTime[1].length === 4 && (val < 2400)) { // 軍事時間
-          currentEvent.startH = parseInt(singleTime[1].substring(0,2));
-          currentEvent.startM = parseInt(singleTime[1].substring(2,4));
-       } else if (singleTime[1].length <= 2) {
-          currentEvent.startH = val;
-          currentEvent.startM = singleTime[3] ? parseInt(singleTime[3]) : 0;
-       } else {
-          // 可能是年份或其他數字，忽略
-          if (currentEvent) currentEvent.title += (currentEvent.title ? " " : "") + line;
-          continue;
-       }
-       
-       // 預設結束時間 = 開始 + 1小時
-       currentEvent.endH = currentEvent.startH + 1;
-       currentEvent.endM = currentEvent.startM;
-       currentEvent.isSingleTime = true;
+       if (singleTime[1].length === 4 && (val < 2400)) { currentEvent.startH = parseInt(singleTime[1].substring(0,2)); currentEvent.startM = parseInt(singleTime[1].substring(2,4)); } 
+       else if (singleTime[1].length <= 2) { currentEvent.startH = val; currentEvent.startM = singleTime[3] ? parseInt(singleTime[3]) : 0; } 
+       else { if (currentEvent) currentEvent.title += (currentEvent.title ? " " : "") + line; continue; }
+       currentEvent.endH = currentEvent.startH + 1; currentEvent.endM = currentEvent.startM; currentEvent.isSingleTime = true;
        continue;
     }
     else if (allDayMatch) { currentEvent.startH = 9; currentEvent.endH = 18; continue; }
@@ -517,9 +449,7 @@ function saveToSheet(userId, data) {
     const row = existingData[i];
     let rowDate = row[1];
     if (rowDate instanceof Date) { rowDate = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "yyyy-MM-dd"); }
-    if (rowDate == data.date && row[2] == data.timeStart && row[5] == data.title) {
-      return true; 
-    }
+    if (rowDate == data.date && row[2] == data.timeStart && row[5] == data.title) { return true; }
   }
 
   sheet.appendRow([userId, data.date, data.timeStart, data.timeEnd, data.startObj, data.title, data.location, "", new Date()]);
@@ -564,9 +494,9 @@ function checkReminders() {
       const timeDiffMin = (eventTime.getTime() - now.getTime()) / 60000;
       if (timeDiffMin <= offsetMin && timeDiffMin > (offsetMin - 20)) {
         let timeLabel = "";
-        if (offsetMin >= 1440) timeLabel = \`前\${Math.floor(offsetMin/1440)}天\`;
-        else if (offsetMin >= 60) timeLabel = \`前\${(offsetMin/60).toFixed(1).replace('.0','')}小時\`;
-        else timeLabel = \`前\${offsetMin}分鐘\`;
+        if (offsetMin >= 1440) timeLabel = \`前 \${Math.floor(offsetMin/1440)} 天\`;
+        else if (offsetMin >= 60) timeLabel = \`前 \${(offsetMin/60).toFixed(1).replace('.0','')} 小時\`;
+        else timeLabel = \`前 \${offsetMin} 分鐘\`;
         const msg = \`⏰ 提醒 (\${timeLabel})：活動即將開始！\\n\\n主題：\${title}\\n時間：\${Utilities.formatDate(eventTime, Session.getScriptTimeZone(), "HH:mm")}\\n地點/連結：\${location}\`;
         pushLineMessage(userId, msg);
         notifiedStatus += \`|\${offsetMin}|\`;
@@ -612,10 +542,10 @@ function pushLineMessage(userId, text) {
             let reminders = [60]; 
             const r1Val = document.getElementById('rem1_val').value;
             const r1Unit = document.getElementById('rem1_unit').value;
-            if (r1Val && r1Val > 0) { reminders.push(parseInt(r1Val) * parseInt(r1Unit)); }
+            if (r1Val && !isNaN(r1Val) && parseInt(r1Val) > 0) { reminders.push(parseInt(r1Val) * parseInt(r1Unit)); }
             const r2Val = document.getElementById('rem2_val').value;
             const r2Unit = document.getElementById('rem2_unit').value;
-            if (r2Val && r2Val > 0) { reminders.push(parseInt(r2Val) * parseInt(r2Unit)); }
+            if (r2Val && !isNaN(r2Val) && parseInt(r2Val) > 0) { reminders.push(parseInt(r2Val) * parseInt(r2Unit)); }
             reminders = [...new Set(reminders)].sort((a,b) => a - b);
             const reminderArrayStr = JSON.stringify(reminders);
 

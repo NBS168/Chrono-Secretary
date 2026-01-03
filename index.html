@@ -9,6 +9,19 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; }
+        .step-number {
+            width: 2rem;
+            height: 2rem;
+            background-color: #2563eb;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -17,7 +30,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v4.2 極速排序版</p>
+                <p class="text-blue-100 text-sm mt-1">v3.9.1 強制排序修正版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,22 +39,20 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v4.2 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v3.9.1 更新說明</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                針對「沒反應」與「沒排序」問題進行了核心邏輯瘦身。
+                修正了資料寫入後未立即排序的問題。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🚀 <b>效能提速：</b>移除冗餘的預先排序，只在資料寫入後執行一次強制排序，避免超時。</li>
-                <li>⚡ <b>OCR 優化：</b>縮短重試等待時間，防止 LINE Token 過期。</li>
-                <li>🛡️ <b>強制回覆：</b>若處理時間過長，自動切換為 Push Message 推播，確保您收到回應。</li>
-                <li>📊 <b>排序修復：</b>修正了排序範圍選取邏輯，確保新舊資料都能正確排列。</li>
+                <li>📊 <b>強制排序：</b>加入 <code>flush()</code> 指令，確保新增行程後立即執行排序，讓資料按日期整齊排列。</li>
+                <li>🎯 <b>功能保留：</b>包含 v3.9 的精準防重複、民國年支援與語句優化。</li>
             </ul>
         </section>
 
         <!-- 步驟 1: LINE 設定 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">1</div>
+                <div class="step-number">1</div>
                 <h2 class="text-xl font-bold text-gray-800">建立 LINE 官方帳號與取得 Token</h2>
             </div>
             <div class="pl-10 space-y-6 text-sm text-gray-600">
@@ -63,7 +74,7 @@
         <!-- 步驟 2: Google Sheet 設定 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">2</div>
+                <div class="step-number">2</div>
                 <h2 class="text-xl font-bold text-gray-800">準備 Google Sheet</h2>
             </div>
             <div class="pl-10 space-y-3 text-sm text-gray-600">
@@ -79,7 +90,7 @@
         <!-- 步驟 3: 設定提醒通知 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">3</div>
+                <div class="step-number">3</div>
                 <h2 class="text-xl font-bold text-gray-800">設定提醒通知時間 (可選)</h2>
             </div>
             <div class="pl-10 text-sm text-gray-600">
@@ -130,7 +141,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v4.2)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v3.9.1)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -142,7 +153,7 @@
         <!-- 步驟 4: GAS 部署 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">4</div>
+                <div class="step-number">4</div>
                 <h2 class="text-xl font-bold text-gray-800">部署 Google Apps Script</h2>
             </div>
             <div class="pl-10 space-y-4 text-sm text-gray-600">
@@ -175,12 +186,13 @@
     </footer>
 
     <script>
+        // 這是 v3.9.1 的 GAS 模板
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v4.2 (極速排序 & 逾時修正版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v3.9.1 (強制排序修正版)
  * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. 效能優化：移除冗餘的預先排序，只保留寫入後的強制排序
- * 2. 逾時保護：OCR 重試間隔縮短，錯誤處理強制使用 Push Message
+ * 1. saveToSheet 函式加入 flush() 強制刷新，解決排序失效問題
+ * 2. 保留精準防重複與民國年支援
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -190,11 +202,13 @@ const CALENDAR_ID = 'primary';
 const SHEET_NAME = '行程記錄'; 
 const HISTORY_SHEET_NAME = '歷史封存';
 
-// [重要] 提醒時間設定
+// [重要] 提醒時間設定 (單位：分鐘)
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v4.2 極速排序版)！"); }
+// ================= 測試部署狀態用 =================
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v3.9.1 排序修正版)！"); }
 
+// ================= 權限初始化 =================
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
   Logger.log(\`使用者 \${user} 檢查權限...\`);
@@ -213,6 +227,7 @@ function initialSetup() {
   Logger.log("🎉 權限檢查完成！請進行部署。");
 }
 
+// ================= Webhook 入口 =================
 function doPost(e) {
   if (!e || !e.postData) return;
   const msgObj = JSON.parse(e.postData.contents);
@@ -226,7 +241,7 @@ function doPost(e) {
     try {
       if (event.message.type === 'text') { userMessage = event.message.text; } 
       else if (event.message.type === 'image') {
-        replyLine(replyToken, "🔍 收到圖片，AI 辨識中...");
+        replyLine(replyToken, "🔍 收到圖片，AI 辨識中...(約3-5秒)");
         userMessage = handleImageOCR(event.message.id);
         if (!userMessage.trim()) { pushLineMessage(userId, "❌ 圖片辨識失敗。"); return; }
       } else { return; }
@@ -235,141 +250,70 @@ function doPost(e) {
         const result = parseFlexibleScheduleV3(userMessage);
         
         if (result.status === 'error') {
-           // 若發生錯誤，優先嘗試 push，避免 token 過期
-           pushLineMessage(userId, "❌ " + result.message);
+           if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
+           else { replyLine(replyToken, "❌ " + result.message); }
            return;
         }
 
         const parsedData = result.data;
         if (parsedData.length > 0) {
-          // [v4.2] 批次處理
-          const batchResult = processEventsBatch(userId, parsedData);
-          
+          let addedCount = 0;
           let replyMsg = "✅ 處理完成：\\n";
           
-          batchResult.added.forEach(data => {
-             const startStr = Utilities.formatDate(data.startObj, Session.getScriptTimeZone(), "MM/dd HH:mm");
-             const endStr = Utilities.formatDate(data.endObj, Session.getScriptTimeZone(), "HH:mm");
-             replyMsg += \`----------------\\n📅 \${startStr} - \${endStr}\\n📝 \${data.title}\\n📍 \${data.location || '線上/無地點'}\\n\`;
-          });
-
-          batchResult.ignored.forEach(title => {
-             replyMsg += \`----------------\\n(已忽略重複行程：\${title})\\n\`;
+          parsedData.forEach(data => {
+            const isDuplicate = saveToSheet(userId, data);
+            if (!isDuplicate) {
+              createCalendarEvent(data);
+              const startStr = Utilities.formatDate(data.startObj, Session.getScriptTimeZone(), "MM/dd HH:mm");
+              const endStr = Utilities.formatDate(data.endObj, Session.getScriptTimeZone(), "HH:mm");
+              replyMsg += \`----------------\\n📅 \${startStr} - \${endStr}\\n📝 \${data.title}\\n📍 \${data.location || '線上/無地點'}\\n\`;
+              addedCount++;
+            } else {
+              replyMsg += \`----------------\\n(已忽略重複行程：\${data.title})\\n\`;
+            }
           });
           
-          if (batchResult.added.length > 0) {
+          if (addedCount > 0) {
             const reminderText = REMINDER_OFFSETS.map(min => {
               if (min >= 1440) return \`前 \${Math.floor(min/1440)} 天\`;
               if (min >= 60) return \`前 \${(min/60).toFixed(1).replace('.0','')} 小時\`;
               return \`前 \${min} 分鐘\`;
             }).join("、");
-            replyMsg += \`\\n🔔 機器人將在活動 \${reminderText} 通知您。\`;
-          } else if (batchResult.ignored.length > 0 && batchResult.added.length === 0) {
+            replyMsg += \`\\n🔔 機器人將在活動\${reminderText}通知您。\`;
+          } else {
             replyMsg += "\\n(所有行程均已存在，無需新增)";
           }
           
-          // 強制使用 Push Message 回覆結果，因為處理時間可能超過 replyToken 的 30秒限制
-          pushLineMessage(userId, replyMsg);
+          if (event.message.type === 'image') { pushLineMessage(userId, replyMsg); }
+          else { replyLine(replyToken, replyMsg); }
         } else {
-           pushLineMessage(userId, "無法辨識行程。請確認含有日期(如1/9)與時間。");
+           const failMsg = "無法辨識行程。請確認含有日期(如1/9)與時間。";
+           if (event.message.type === 'image') { pushLineMessage(userId, failMsg); }
+           else { replyLine(replyToken, failMsg); }
         }
       }
     } catch (err) {
       Logger.log(err);
-      // 發生例外錯誤時，強制使用 Push Message
-      pushLineMessage(userId, "❌ 系統錯誤：" + err.message);
+      const errMsg = "❌ 錯誤：" + err.message;
+      if (event.message.type === 'image') { pushLineMessage(userId, errMsg); }
+      else { replyLine(replyToken, errMsg); }
     }
   }
 }
 
-// ================= v4.2 批次處理核心 (極速排序) =================
-function processEventsBatch(userId, newEvents) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  let sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "建立時間"]);
-    sheet.setFrozenRows(1);
-  }
-
-  // [v4.2 優化] 移除這裡的預先排序，節省時間
-
-  // 一次性讀取所有資料建立比對指紋
-  const existingData = sheet.getDataRange().getValues();
-  const existingSignatures = new Set();
-  
-  // 跳過標題列
-  for (let i = 1; i < existingData.length; i++) {
-    const row = existingData[i];
-    let rowTime = row[4];
-    if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); }
-    
-    if (!isNaN(rowTime.getTime())) {
-       // 指紋：時間(分鐘級)_標題
-       const timeKey = Math.floor(rowTime.getTime() / 60000);
-       existingSignatures.add(\`\${timeKey}_\${row[5]}\`);
-    }
-  }
-
-  const rowsToAdd = [];
-  const addedEvents = [];
-  const ignoredTitles = [];
-
-  newEvents.forEach(event => {
-    const eventTimeKey = Math.floor(event.startObj.getTime() / 60000);
-    const signature = \`\${eventTimeKey}_\${event.title}\`;
-
-    if (existingSignatures.has(signature)) {
-      ignoredTitles.push(event.title);
-    } else {
-      rowsToAdd.push([
-        userId,
-        event.date,
-        event.timeStart,
-        event.timeEnd,
-        event.startObj,
-        event.title,
-        event.location,
-        "", // 提醒狀態
-        new Date() // 建立時間
-      ]);
-      createCalendarEvent(event);
-      addedEvents.push(event);
-      existingSignatures.add(signature);
-    }
-  });
-
-  // 批次寫入 & 強制排序
-  if (rowsToAdd.length > 0) {
-    const lastRow = sheet.getLastRow();
-    sheet.getRange(lastRow + 1, 1, rowsToAdd.length, rowsToAdd[0].length).setValues(rowsToAdd);
-    SpreadsheetApp.flush(); // 強制刷新
-    
-    // [v4.2] 確保有資料才排序
-    const finalLastRow = sheet.getLastRow();
-    if (finalLastRow > 1) {
-        sheet.getRange(2, 1, finalLastRow - 1, sheet.getLastColumn()).sort({column: 5, ascending: true});
-    }
-  }
-
-  return { added: addedEvents, ignored: ignoredTitles };
-}
-
+// ================= OCR 核心 =================
 function handleImageOCR(messageId) {
   const url = \`https://api-data.line.me/v2/bot/message/\${messageId}/content\`;
   const response = UrlFetchApp.fetch(url, { 'headers': { 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN } });
   const blob = response.getBlob();
   const resource = { title: "temp_ocr_" + new Date().getTime(), mimeType: blob.getContentType() };
   let file, attempts = 0;
-  // [v4.2] 縮短重試次數與時間，避免 Timeout
-  const maxAttempts = 3; 
-  while (attempts < maxAttempts) {
+  while (attempts < 5) {
     try { file = Drive.Files.insert(resource, blob, { ocr: true }); break; } 
     catch (e) { 
       attempts++; 
-      // 縮短等待時間為固定 1 秒
-      if(attempts >= maxAttempts) throw new Error("OCR 忙碌，請稍後再試。");
-      Utilities.sleep(1000); 
+      if(attempts>=5) throw new Error("OCR 服務忙碌，請稍後再試。");
+      Utilities.sleep(attempts * 3000); 
     }
   }
   const text = DocumentApp.openById(file.id).getBody().getText();
@@ -377,6 +321,7 @@ function handleImageOCR(messageId) {
   return text;
 }
 
+// ================= 狀態機解析器 V3.5 =================
 function parseFlexibleScheduleV3(text) {
   text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/⋅/g, " ").replace(/[()（）]/g, " "); 
   const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
@@ -472,20 +417,57 @@ function parseFlexibleScheduleV3(text) {
   return { status: 'success', data: results };
 }
 
+// ================= Google Sheet 儲存與排序 (v3.9.1 修正) =================
+function saveToSheet(userId, data) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { sheet = ss.insertSheet(SHEET_NAME); sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "建立時間"]); }
+  
+  // 防重複檢查 (深度比對)
+  const existingData = sheet.getDataRange().getValues();
+  for (let i = 1; i < existingData.length; i++) {
+    const row = existingData[i];
+    let rowTime = row[4];
+    if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); } // 強制轉型
+    
+    if (!isNaN(rowTime.getTime())) {
+         // 容許 60 秒誤差
+         if (Math.abs(rowTime.getTime() - data.startObj.getTime()) < 60000 && row[5] === data.title) {
+             return true; 
+         }
+    }
+  }
+
+  sheet.appendRow([userId, data.date, data.timeStart, data.timeEnd, data.startObj, data.title, data.location, "", new Date()]);
+  
+  // [修正] 強制寫入後再排序
+  SpreadsheetApp.flush(); 
+
+  if (sheet.getLastRow() > 1) {
+    const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
+    range.sort({column: 5, ascending: true});
+  }
+  return false; 
+}
+
 function createCalendarEvent(data) {
   CalendarApp.getCalendarById(CALENDAR_ID).createEvent(data.title, data.startObj, data.endObj, { description: \`地點/連結: \${data.location}\\n(時光秘書)\`, location: data.location });
 }
 
+// ================= 觸發器 =================
 function checkReminders() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return;
+
   const now = new Date();
   if (now.getHours() === 4 && now.getMinutes() < 15) { performDailyMaintenance(ss, sheet); }
+
   const dataRange = sheet.getDataRange();
   const values = dataRange.getValues();
   const maxReminderMin = Math.max(...REMINDER_OFFSETS);
   const maxLookAheadTime = new Date(now.getTime() + (maxReminderMin + 60) * 60 * 1000); 
+
   for (let i = 1; i < values.length; i++) {
     const row = values[i];
     const userId = row[0];
@@ -493,7 +475,9 @@ function checkReminders() {
     const title = row[5];
     const location = row[6];
     let notifiedStatus = row[7] ? String(row[7]) : ""; 
+    
     if (eventTime > maxLookAheadTime) { break; }
+
     let needUpdate = false;
     REMINDER_OFFSETS.forEach(offsetMin => {
       if (notifiedStatus.includes(\`|\${offsetMin}|\`)) return;

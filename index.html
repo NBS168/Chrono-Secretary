@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時光秘書 - 自動化行程助理產生器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .step-number {
+            width: 2rem;
+            height: 2rem;
+            background-color: #2563eb;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <header class="bg-blue-600 text-white p-6 shadow-md">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
+                <p class="text-blue-100 text-sm mt-1">v3.0 防重複優化版</p>
+            </div>
+            <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-6 space-y-8">
+
+        <!-- 簡介 -->
+        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v3.0 版本更新</h2>
+            <p class="text-gray-600 leading-relaxed mb-4">
+                這個版本加入了<b>「防重複機制」</b>。當您上傳相同的圖片或文字時，系統會自動比對日期、時間與標題，若已存在則自動略過，避免行事曆大塞車。
+            </p>
+            <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
+                <li>🛡️ <b>防止重複：</b>自動偵測並過濾已存在的相同行程。</li>
+                <li>⏰ <b>自訂提醒：</b>在下方直接設定想要多久前通知。</li>
+                <li>📊 <b>自動排序：</b>行程寫入時自動按日期排序。</li>
+                <li>🚀 <b>效能優化：</b>智慧檢查機制，節省運算資源。</li>
+                <li>🧹 <b>每日維護：</b>自動封存過期行程。</li>
+            </ul>
+        </section>
+
+        <!-- 步驟 1: LINE 設定 -->
+        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center mb-4">
+                <div class="step-number">1</div>
+                <h2 class="text-xl font-bold text-gray-800">建立 LINE 官方帳號與取得 Token</h2>
+            </div>
+            
+            <div class="pl-10 space-y-6 text-sm text-gray-600">
+                <!-- 省略詳細圖文教學以節省版面，邏輯與前版相同 -->
+                <div>
+                    <h3 class="font-bold text-blue-700 mb-2"><i class="fa-solid fa-key mr-1"></i> 取得 Channel Access Token</h3>
+                    <ul class="list-decimal ml-5 space-y-2">
+                        <li>前往 <a href="https://developers.line.biz/zh-hant/" target="_blank" class="text-blue-600 hover:underline font-bold">LINE Developers Console</a>。</li>
+                        <li>在 <b>Messaging API</b> 分頁最下方產生 Token。</li>
+                        <li>記得關閉 <b>Auto-reply messages (自動回應)</b>。</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-6 pl-10 border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Channel Access Token：</label>
+                <input type="text" id="inputToken" placeholder="例如：eyJhbGciOiJIUzI1NiJ9..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+            </div>
+        </section>
+
+        <!-- 步驟 2: Google Sheet 設定 -->
+        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center mb-4">
+                <div class="step-number">2</div>
+                <h2 class="text-xl font-bold text-gray-800">準備 Google Sheet</h2>
+            </div>
+            <div class="pl-10 space-y-3 text-sm text-gray-600">
+                <p>1.建立一個新的 <a href="https://sheets.new" target="_blank" class="text-blue-600 hover:underline">Google Sheet</a>。</p>
+                <p>2.複製網址列中的 ID。</p>
+            </div>
+
+            <div class="mt-4 pl-10">
+                <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Google Sheet ID：</label>
+                <input type="text" id="inputSheetId" placeholder="例如：1qo5L0zcjQweI7xV8cqE-3BByS0PMq-d6aAVfQzs20bo" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+            </div>
+        </section>
+
+        <!-- 步驟 3: 設定提醒通知 (新功能) -->
+        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center mb-4">
+                <div class="step-number">3</div>
+                <h2 class="text-xl font-bold text-gray-800">設定提醒通知時間 (可選)</h2>
+            </div>
+            <div class="pl-10 text-sm text-gray-600">
+                <p class="mb-4">除了基本的 1 小時前通知，您還可以增加 2 個額外的提醒時間點。</p>
+                
+                <div class="space-y-4">
+                    <!-- 固定選項 -->
+                    <div class="flex items-center p-3 bg-gray-100 rounded border border-gray-300">
+                        <i class="fa-solid fa-lock text-gray-400 mr-3"></i>
+                        <span class="font-bold text-gray-700 w-24">基本提醒</span>
+                        <span class="text-blue-600 font-bold bg-blue-100 px-2 py-1 rounded text-xs">前 1 小時</span>
+                        <span class="ml-2 text-gray-400 text-xs">(系統預設，無法取消)</span>
+                    </div>
+
+                    <!-- 自訂選項 1 -->
+                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-blue-400 transition">
+                        <i class="fa-regular fa-bell text-blue-500 mr-3"></i>
+                        <span class="font-bold text-gray-700 w-24">額外提醒 1</span>
+                        <span class="mr-2 text-gray-500 text-xs">前</span>
+                        <input type="number" id="rem1_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 outline-none">
+                        <select id="rem1_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                            <option value="1">分鐘</option>
+                            <option value="60">小時</option>
+                            <option value="1440">天</option>
+                        </select>
+                    </div>
+
+                    <!-- 自訂選項 2 -->
+                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-blue-400 transition">
+                        <i class="fa-regular fa-bell text-blue-500 mr-3"></i>
+                        <span class="font-bold text-gray-700 w-24">額外提醒 2</span>
+                        <span class="mr-2 text-gray-500 text-xs">前</span>
+                        <input type="number" id="rem2_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 outline-none">
+                        <select id="rem2_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                            <option value="1">分鐘</option>
+                            <option value="60">小時</option>
+                            <option value="1440">天</option>
+                        </select>
+                    </div>
+                    
+                    <p class="text-xs text-gray-400 mt-2">* 如果不想設定額外提醒，數字欄位留空即可。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 產生程式碼按鈕 -->
+        <section class="bg-blue-50 p-6 rounded-lg shadow-sm border border-blue-200 text-center">
+            <h2 class="text-xl font-bold text-blue-800 mb-2">產生您的專屬程式碼</h2>
+            <button onclick="generateCode()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
+                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>一鍵產生代碼
+            </button>
+        </section>
+
+        <!-- 結果顯示區 -->
+        <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v3.0)</h3>
+                <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
+                    <i class="fa-regular fa-copy mr-2"></i>複製代碼
+                </button>
+            </div>
+            <textarea id="outputCode" readonly class="w-full h-64 p-3 bg-gray-900 text-green-400 font-mono text-xs rounded shadow-inner focus:outline-none resize-y"></textarea>
+            <p id="copyStatus" class="text-green-600 text-sm mt-2 hidden text-right"><i class="fa-solid fa-check mr-1"></i>已複製到剪貼簿！</p>
+        </section>
+
+        <!-- 步驟 4: GAS 部署 -->
+        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center mb-4">
+                <div class="step-number">4</div>
+                <h2 class="text-xl font-bold text-gray-800">部署 Google Apps Script</h2>
+            </div>
+            <div class="pl-10 space-y-4 text-sm text-gray-600">
+                <ol class="list-decimal list-outside ml-4 space-y-3">
+                    <li>前往 Google Sheet > <b>擴充功能</b> > <b>Apps Script</b>，貼上代碼。</li>
+                    <li>
+                        <span class="font-bold text-red-600">開啟 Drive API v2 (服務 > + > Drive API > v2)。</span>
+                    </li>
+                    <li>
+                        執行 <code>initialSetup</code> 函式並完成授權。
+                    </li>
+                    <li>
+                        <b>部署為 Web App</b> (執行身分: Me, 存取權: Anyone)，將網址貼回 LINE Webhook。
+                    </li>
+                    <li>
+                        <b>設定觸發器：</b>
+                        <ul class="list-disc ml-5 mt-1 text-gray-500">
+                            <li>新增觸發條件：<code>checkReminders</code> / 時間驅動 / 分鐘計時器 / <b>每 15 分鐘</b>。</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 text-center p-6 text-sm text-gray-500 mt-8">
+        <p>&copy; 2026 時光秘書專案</p>
+    </footer>
+
+    <script>
+        // 這是 v3.0 的 GAS 模板
+        const gasTemplate = `/**
+ * 專案名稱：時光秘書 (Chrono-Secretary) v3.0 (防重複優化版)
+ * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
+ * 更新：
+ * 1. 寫入前檢查重複行程 (比對日期、時間、標題)
+ * 2. 支援使用者於網頁端自訂提醒時間
+ * 3. 寫入時自動按日期排序
+ */
+
+// ================= 設定區 (由網頁產生器自動填入) =================
+const CHANNEL_ACCESS_TOKEN = '{{TOKEN}}'; 
+const SHEET_ID = '{{SHEET_ID}}'; 
+const CALENDAR_ID = 'primary'; 
+const SHEET_NAME = '行程記錄'; 
+const HISTORY_SHEET_NAME = '歷史封存';
+
+// [重要] 提醒時間設定 (單位：分鐘)
+const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
+
+// ================= 測試部署狀態用 =================
+function doGet(e) {
+  return ContentService.createTextOutput("服務正常運作中 (v3.0 防重複版)！");
+}
+
+// ================= 權限初始化 =================
+function initialSetup() {
+  const user = Session.getActiveUser().getEmail();
+  Logger.log(\`使用者 \${user} 檢查權限...\`);
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    if (!ss.getSheetByName(HISTORY_SHEET_NAME)) {
+      ss.insertSheet(HISTORY_SHEET_NAME).appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "封存時間"]);
+    }
+    Logger.log("✅ 試算表權限 OK");
+  } catch (e) { Logger.log("❌ 試算表錯誤: " + e.message); }
+  try { CalendarApp.getCalendarById(CALENDAR_ID); Logger.log("✅ 日曆權限 OK"); } catch (e) { Logger.log("❌ 日曆錯誤: " + e.message); }
+  try { 
+    const tempFile = DriveApp.createFile("temp_auth_check.txt", "Auth Check"); 
+    tempFile.setTrashed(true); Logger.log("✅ Drive 寫入權限 OK"); 
+  } catch (e) { Logger.log("❌ Drive 寫入權限失敗: " + e.message); }
+  Logger.log("🎉 權限檢查完成！請進行部署。");
+}
+
+// ================= Webhook 入口 =================
+function doPost(e) {
+  if (!e || !e.postData) return;
+  const msgObj = JSON.parse(e.postData.contents);
+  if (!msgObj.events || msgObj.events.length === 0) return;
+  const event = msgObj.events[0];
+  const replyToken = event.replyToken;
+  const userId = event.source.userId;
+  
+  if (event.type === 'message') {
+    let userMessage = "";
+    try {
+      if (event.message.type === 'text') { userMessage = event.message.text; } 
+      else if (event.message.type === 'image') {
+        replyLine(replyToken, "🔍 收到圖片，AI 辨識中...(約3-5秒)");
+        userMessage = handleImageOCR(event.message.id);
+        if (!userMessage.trim()) { pushLineMessage(userId, "❌ 圖片辨識失敗。"); return; }
+      } else { return; }
+
+      if (userMessage) {
+        const parsedData = parseFlexibleSchedule(userMessage);
+        if (parsedData.length > 0) {
+          let addedCount = 0;
+          let replyMsg = "✅ 處理完成：\\n";
+          
+          parsedData.forEach(data => {
+            const isDuplicate = saveToSheet(userId, data);
+            if (!isDuplicate) {
+              createCalendarEvent(data);
+              const startStr = Utilities.formatDate(data.startObj, Session.getScriptTimeZone(), "MM/dd HH:mm");
+              const endStr = Utilities.formatDate(data.endObj, Session.getScriptTimeZone(), "HH:mm");
+              replyMsg += \`----------------\\n📅 \${startStr} - \${endStr}\\n📝 \${data.title}\\n📍 \${data.location || '線上/無地點'}\\n\`;
+              addedCount++;
+            } else {
+              replyMsg += \`----------------\\n(已忽略重複行程：\${data.title})\\n\`;
+            }
+          });
+          
+          if (addedCount > 0) {
+            const reminderText = REMINDER_OFFSETS.map(min => {
+              if (min >= 1440) return \`前\${Math.floor(min/1440)}天\`;
+              if (min >= 60) return \`前\${(min/60).toFixed(1).replace('.0','')}小時\`;
+              return \`前\${min}分鐘\`;
+            }).join("、");
+            replyMsg += \`\\n🔔 提醒設定：\${reminderText} 通知。\`;
+          } else {
+            replyMsg += "\\n(所有行程均已存在，無需新增)";
+          }
+          
+          if (event.message.type === 'image') { pushLineMessage(userId, replyMsg); }
+          else { replyLine(replyToken, replyMsg); }
+        } else {
+           const failMsg = "無法辨識行程。請確認含有日期(如1/9)與時間。";
+           if (event.message.type === 'image') { pushLineMessage(userId, failMsg); }
+           else { replyLine(replyToken, failMsg); }
+        }
+      }
+    } catch (err) {
+      Logger.log(err);
+      const errMsg = "❌ 錯誤：" + err.message;
+      if (event.message.type === 'image') { pushLineMessage(userId, errMsg); }
+      else { replyLine(replyToken, errMsg); }
+    }
+  }
+}
+
+// ================= OCR 核心 =================
+function handleImageOCR(messageId) {
+  const url = \`https://api-data.line.me/v2/bot/message/\${messageId}/content\`;
+  const response = UrlFetchApp.fetch(url, { 'headers': { 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN } });
+  const resource = { title: "temp_ocr", mimeType: response.getBlob().getContentType() };
+  let file;
+  try { file = Drive.Files.insert(resource, response.getBlob(), { ocr: true }); }
+  catch (e) { throw new Error("Drive API 權限不足(請執行 initialSetup): " + e.message); }
+  const text = DocumentApp.openById(file.id).getBody().getText();
+  Drive.Files.remove(file.id);
+  return text;
+}
+
+// ================= 狀態機解析器 =================
+function parseFlexibleSchedule(text) {
+  text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/⋅/g, " ").replace(/[()（）]/g, " "); 
+  const urlRegex = /(https?:\\/\\/[^\\s]+)/g;
+  const links = text.match(urlRegex) || [];
+  let linkIndex = 0;
+  const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
+  const results = [];
+  const currentYear = new Date().getFullYear();
+  let currentEvent = null;
+
+  const flushCurrentEvent = () => {
+    if (currentEvent) {
+      if (!currentEvent.startH) { currentEvent.startH = 9; currentEvent.startM = 0; currentEvent.endH = 10; currentEvent.endM = 0; }
+      if (!currentEvent.title) currentEvent.title = "未命名行程";
+      const dateStr = currentEvent.date;
+      const startObj = new Date(\`\${dateStr}T\${String(currentEvent.startH).padStart(2,'0')}:\${String(currentEvent.startM).padStart(2,'0')}:00\`);
+      const endObj = new Date(\`\${dateStr}T\${String(currentEvent.endH).padStart(2,'0')}:\${String(currentEvent.endM).padStart(2,'0')}:00\`);
+      let assignedLink = "";
+      if (links.length > 0) {
+        if (links.length === 1) assignedLink = links[0];
+        else if (linkIndex < links.length) assignedLink = links[linkIndex++];
+        else assignedLink = links[links.length - 1]; 
+      }
+      results.push({
+        date: dateStr,
+        timeStart: \`\${String(currentEvent.startH).padStart(2,'0')}:\${String(currentEvent.startM).padStart(2,'0')}\`,
+        timeEnd: \`\${String(currentEvent.endH).padStart(2,'0')}:\${String(currentEvent.endM).padStart(2,'0')}\`,
+        startObj: startObj, endObj: endObj, title: currentEvent.title, location: assignedLink
+      });
+      currentEvent = null;
+    }
+  };
+
+  for (let line of lines) {
+    if (line.match(/^https?:\\/\\//) || line.match(/^(時間|日期|行程表|July|講師)/i)) continue;
+    const dateMatch = line.match(/(\\d{4})?[-./年]?(\\d{1,2})[-./月](\\d{1,2})日?/);
+    if (dateMatch) {
+       if (!line.match(/\\d{1,2}\\s*[-~]\\s*\\d{1,2}/)) {
+          flushCurrentEvent();
+          let y = dateMatch[1] || currentYear;
+          let m = dateMatch[2]; let d = dateMatch[3];
+          currentEvent = { date: \`\${y}-\${String(m).padStart(2,'0')}-\${String(d).padStart(2,'0')}\`, title: "", startH: null, startM: 0, endH: null, endM: 0 };
+          line = line.replace(dateMatch[0], " ").trim(); 
+       }
+    }
+    if (!currentEvent) continue;
+    const timeRangeMatch = line.match(/(\\d{1,2})[:：]?(\\d{2})?\\s*[-~]\\s*(\\d{1,2})[:：]?(\\d{2})?/);
+    const startTimeOnlyMatch = line.match(/(\\d{1,2})[:：]?(\\d{2})?\\s*[-~]$/);
+    const singleTimeMatch = line.match(/^(\\d{1,2})[:：]?(\\d{2})?$/);
+    const allDayMatch = line.match(/(整天|全天)/);
+    const halfDayMatch = line.match(/(上午|下午)?\\s*半天/);
+    if (timeRangeMatch) { currentEvent.startH = parseInt(timeRangeMatch[1]); currentEvent.startM = timeRangeMatch[2]?parseInt(timeRangeMatch[2]):0; currentEvent.endH = parseInt(timeRangeMatch[3]); currentEvent.endM = timeRangeMatch[4]?parseInt(timeRangeMatch[4]):0; continue; } 
+    else if (startTimeOnlyMatch) { currentEvent.startH = parseInt(startTimeOnlyMatch[1]); currentEvent.startM = startTimeOnlyMatch[2]?parseInt(startTimeOnlyMatch[2]):0; continue; }
+    else if (singleTimeMatch) { if (currentEvent.startH !== null && currentEvent.endH === null) { currentEvent.endH = parseInt(singleTimeMatch[1]); currentEvent.endM = singleTimeMatch[2]?parseInt(singleTimeMatch[2]):0; continue; } }
+    else if (allDayMatch) { currentEvent.startH = 9; currentEvent.endH = 18; continue; }
+    else if (halfDayMatch) { if (halfDayMatch[0].includes('上')) { currentEvent.startH = 9; currentEvent.endH = 12; } else { currentEvent.startH = 13; currentEvent.endH = 17; } continue; }
+    if (line.match(/^[日一二三四五六]$/)) continue;
+    if (currentEvent) { currentEvent.title += (currentEvent.title ? " " : "") + line; }
+  }
+  flushCurrentEvent();
+  return results;
+}
+
+// ================= Google Sheet 儲存與排序 (含防重複) =================
+function saveToSheet(userId, data) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) { sheet = ss.insertSheet(SHEET_NAME); sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "建立時間"]); }
+  
+  // 防重複檢查
+  const existingData = sheet.getDataRange().getValues();
+  for (let i = 1; i < existingData.length; i++) {
+    const row = existingData[i];
+    let rowDate = row[1];
+    // 轉換 Sheet 中的 Date 物件為字串 (yyyy-MM-dd) 以便比對
+    if (rowDate instanceof Date) {
+      rowDate = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    }
+    // 比對 日期、開始時間、標題
+    if (rowDate == data.date && row[2] == data.timeStart && row[5] == data.title) {
+      Logger.log("發現重複行程，跳過新增: " + data.title);
+      return true; // 回傳 true 代表是重複資料
+    }
+  }
+
+  // 若無重複，則新增
+  sheet.appendRow([userId, data.date, data.timeStart, data.timeEnd, data.startObj, data.title, data.location, "", new Date()]);
+  
+  if (sheet.getLastRow() > 1) {
+    const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
+    range.sort({column: 5, ascending: true});
+  }
+  return false; // 回傳 false 代表成功新增
+}
+
+function createCalendarEvent(data) {
+  CalendarApp.getCalendarById(CALENDAR_ID).createEvent(data.title, data.startObj, data.endObj, { description: \`地點/連結: \${data.location}\\n(時光秘書)\`, location: data.location });
+}
+
+// ================= 觸發器：多重提醒 + 自動維護 + 效能優化 =================
+function checkReminders() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+
+  const now = new Date();
+  if (now.getHours() === 4 && now.getMinutes() < 15) { performDailyMaintenance(ss, sheet); }
+
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+  // 找出最大的提醒範圍，用來做效能優化
+  const maxReminderMin = Math.max(...REMINDER_OFFSETS);
+  const maxLookAheadTime = new Date(now.getTime() + (maxReminderMin + 60) * 60 * 1000); 
+
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    const userId = row[0];
+    const eventTime = new Date(row[4]); 
+    const title = row[5];
+    const location = row[6];
+    let notifiedStatus = row[7] ? String(row[7]) : ""; 
+    
+    // 效能優化：如果這個行程的時間，比我們需要檢查的最遠時間還晚，那就不用往後檢查了
+    if (eventTime > maxLookAheadTime) {
+      break; 
+    }
+
+    let needUpdate = false;
+    REMINDER_OFFSETS.forEach(offsetMin => {
+      // 檢查是否已經通知過
+      if (notifiedStatus.includes(\`|\${offsetMin}|\`)) return;
+
+      const timeDiffMin = (eventTime.getTime() - now.getTime()) / 60000;
+      
+      // 邏輯：剩餘時間 <= 設定時間 且 剩餘時間 > (設定時間 - 20)
+      if (timeDiffMin <= offsetMin && timeDiffMin > (offsetMin - 20)) {
+        
+        let timeLabel = "";
+        if (offsetMin >= 1440) timeLabel = \`前\${Math.floor(offsetMin/1440)}天\`;
+        else if (offsetMin >= 60) timeLabel = \`前\${(offsetMin/60).toFixed(1).replace('.0','')}小時\`;
+        else timeLabel = \`前\${offsetMin}分鐘\`;
+
+        const msg = \`⏰ 提醒 (\${timeLabel})：活動即將開始！\\n\\n主題：\${title}\\n時間：\${Utilities.formatDate(eventTime, Session.getScriptTimeZone(), "HH:mm")}\\n地點/連結：\${location}\`;
+        pushLineMessage(userId, msg);
+        
+        notifiedStatus += \`|\${offsetMin}|\`;
+        needUpdate = true;
+      }
+    });
+
+    if (needUpdate) {
+      sheet.getRange(i + 1, 8).setValue(notifiedStatus);
+    }
+  }
+}
+
+function performDailyMaintenance(ss, sheet) {
+  let historySheet = ss.getSheetByName(HISTORY_SHEET_NAME);
+  if (!historySheet) { historySheet = ss.insertSheet(HISTORY_SHEET_NAME).appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "封存時間"]); }
+  const values = sheet.getDataRange().getValues();
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setHours(0,0,0,0);
+  for (let i = values.length - 1; i >= 1; i--) {
+    const eventTime = new Date(values[i][4]);
+    if (eventTime < yesterday) {
+      historySheet.appendRow([...values[i], new Date()]);
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+
+function replyLine(replyToken, text) {
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
+    'headers': { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
+    'method': 'post', 'payload': JSON.stringify({ replyToken: replyToken, messages: [{ type: 'text', text: text }] })
+  });
+}
+function pushLineMessage(userId, text) {
+  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
+    'headers': { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
+    'method': 'post', 'payload': JSON.stringify({ to: userId, messages: [{ type: 'text', text: text }] })
+  });
+}
+`;
+
+        function generateCode() {
+            const token = document.getElementById('inputToken').value.trim();
+            const sheetId = document.getElementById('inputSheetId').value.trim();
+            
+            // 讀取自訂提醒
+            let reminders = [60]; // 預設一定有 60 分鐘 (1小時)
+            
+            // 讀取自訂 1
+            const r1Val = document.getElementById('rem1_val').value;
+            const r1Unit = document.getElementById('rem1_unit').value;
+            if (r1Val && r1Val > 0) {
+                reminders.push(parseInt(r1Val) * parseInt(r1Unit));
+            }
+
+            // 讀取自訂 2
+            const r2Val = document.getElementById('rem2_val').value;
+            const r2Unit = document.getElementById('rem2_unit').value;
+            if (r2Val && r2Val > 0) {
+                reminders.push(parseInt(r2Val) * parseInt(r2Unit));
+            }
+            
+            // 去除重複並排序
+            reminders = [...new Set(reminders)].sort((a,b) => a - b);
+            const reminderArrayStr = JSON.stringify(reminders);
+
+            if (!token || !sheetId) {
+                alert("請先輸入 LINE Token 與 Google Sheet ID 喔！");
+                return;
+            }
+
+            let finalCode = gasTemplate
+                .replace('{{TOKEN}}', token)
+                .replace('{{SHEET_ID}}', sheetId)
+                .replace('{{REMINDER_ARRAY}}', reminderArrayStr);
+                
+            const outputArea = document.getElementById('outputCode');
+            outputArea.value = finalCode;
+            
+            const resultSection = document.getElementById('resultSection');
+            resultSection.classList.remove('hidden');
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('copyStatus').classList.add('hidden');
+        }
+
+        function copyCode() {
+            const outputArea = document.getElementById('outputCode');
+            outputArea.select();
+            document.execCommand('copy');
+            const status = document.getElementById('copyStatus');
+            status.classList.remove('hidden');
+            setTimeout(() => status.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

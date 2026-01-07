@@ -30,7 +30,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v3.9.1 強制排序修正版</p>
+                <p class="text-blue-100 text-sm mt-1">v4.4 非同步架構 & 強制排序版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -39,13 +39,14 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v3.9.1 更新說明</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v4.4 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                修正了資料寫入後未立即排序的問題。
+                徹底解決「處理過久沒反應」與「排序失效」的關鍵更新。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>📊 <b>強制排序：</b>加入 <code>flush()</code> 指令，確保新增行程後立即執行排序，讓資料按日期整齊排列。</li>
-                <li>🎯 <b>功能保留：</b>包含 v3.9 的精準防重複、民國年支援與語句優化。</li>
+                <li>⚡ <b>秒回機制：</b>收到圖片立刻回覆「處理中」，後續結果改用推播，避開 LINE 30秒逾時限制。</li>
+                <li>📊 <b>強制排序：</b>加入 <code>flush()</code> 與全表重抓排序，確保行程按日期乖乖排好。</li>
+                <li>🎯 <b>功能保留：</b>精準防重複、民國年支援、多重提醒設定全數保留。</li>
             </ul>
         </section>
 
@@ -141,7 +142,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v3.9.1)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v4.4)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -186,13 +187,13 @@
     </footer>
 
     <script>
-        // 這是 v3.9.1 的 GAS 模板
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v3.9.1 (強制排序修正版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v4.4 (非同步架構 & 強制排序版)
  * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. saveToSheet 函式加入 flush() 強制刷新，解決排序失效問題
- * 2. 保留精準防重複與民國年支援
+ * 1. doPost 分段處理：收到圖片先回覆「處理中」，後續使用 Push Message，解決逾時問題
+ * 2. saveToSheet：強制 flush() 並重新排序，解決排序失效問題
+ * 3. 完整保留防重複、民國年與多重提醒
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -202,13 +203,11 @@ const CALENDAR_ID = 'primary';
 const SHEET_NAME = '行程記錄'; 
 const HISTORY_SHEET_NAME = '歷史封存';
 
-// [重要] 提醒時間設定 (單位：分鐘)
+// [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-// ================= 測試部署狀態用 =================
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v3.9.1 排序修正版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v4.4 非同步版)！"); }
 
-// ================= 權限初始化 =================
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
   Logger.log(\`使用者 \${user} 檢查權限...\`);
@@ -227,7 +226,7 @@ function initialSetup() {
   Logger.log("🎉 權限檢查完成！請進行部署。");
 }
 
-// ================= Webhook 入口 =================
+// [v4.4 重點] 改寫 doPost，先回覆再處理
 function doPost(e) {
   if (!e || !e.postData) return;
   const msgObj = JSON.parse(e.postData.contents);
@@ -238,18 +237,44 @@ function doPost(e) {
   
   if (event.type === 'message') {
     let userMessage = "";
-    try {
-      if (event.message.type === 'text') { userMessage = event.message.text; } 
-      else if (event.message.type === 'image') {
-        replyLine(replyToken, "🔍 收到圖片，AI 辨識中...(約3-5秒)");
+    
+    // Step 1: 針對圖片，立即回覆避免 Timeout
+    if (event.message.type === 'image') {
+      try {
+        // 先用 replyToken 回覆「處理中」，結束 LINE 的同步等待
+        replyLine(replyToken, "🔍 收到圖片，正在進行 AI 辨識與整理... (請稍候)");
+      } catch (e) {
+        Logger.log("Reply failed: " + e.message);
+      }
+      
+      // Step 2: 開始執行耗時的 OCR 與資料處理
+      try {
         userMessage = handleImageOCR(event.message.id);
-        if (!userMessage.trim()) { pushLineMessage(userId, "❌ 圖片辨識失敗。"); return; }
-      } else { return; }
+        if (!userMessage.trim()) { 
+          pushLineMessage(userId, "❌ 圖片辨識失敗，無法讀取文字。"); 
+          return; 
+        }
+        // 繼續往下執行解析邏輯...
+      } catch (err) {
+        pushLineMessage(userId, "❌ 處理錯誤：" + err.message);
+        return;
+      }
+    } else if (event.message.type === 'text') {
+      userMessage = event.message.text;
+      // 文字通常處理很快，這裡選擇直接回覆或也用 Push 都可以
+      // 為了邏輯一致，如果是複雜文字也可以先 reply 再 push，但通常文字秒解，這裡維持原本邏輯
+      // 但為了確保 replyToken 沒被用掉，我們如果是文字，就在最後用 reply
+    } else {
+      return; 
+    }
 
-      if (userMessage) {
+    // Step 3: 解析與寫入 (這段時間可能較長)
+    if (userMessage) {
+      try {
         const result = parseFlexibleScheduleV3(userMessage);
         
         if (result.status === 'error') {
+           // 如果是圖片，replyToken 已經用掉了，必須用 Push
            if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
            else { replyLine(replyToken, "❌ " + result.message); }
            return;
@@ -257,63 +282,142 @@ function doPost(e) {
 
         const parsedData = result.data;
         if (parsedData.length > 0) {
-          let addedCount = 0;
-          let replyMsg = "✅ 處理完成：\\n";
+          // 批次處理
+          const batchResult = processEventsBatch(userId, parsedData);
           
-          parsedData.forEach(data => {
-            const isDuplicate = saveToSheet(userId, data);
-            if (!isDuplicate) {
-              createCalendarEvent(data);
-              const startStr = Utilities.formatDate(data.startObj, Session.getScriptTimeZone(), "MM/dd HH:mm");
-              const endStr = Utilities.formatDate(data.endObj, Session.getScriptTimeZone(), "HH:mm");
-              replyMsg += \`----------------\\n📅 \${startStr} - \${endStr}\\n📝 \${data.title}\\n📍 \${data.location || '線上/無地點'}\\n\`;
-              addedCount++;
-            } else {
-              replyMsg += \`----------------\\n(已忽略重複行程：\${data.title})\\n\`;
-            }
+          let replyMsg = "✅ 行程已安排並排序：\\n";
+          
+          batchResult.added.forEach(data => {
+             const startStr = Utilities.formatDate(data.startObj, Session.getScriptTimeZone(), "MM/dd HH:mm");
+             const endStr = Utilities.formatDate(data.endObj, Session.getScriptTimeZone(), "HH:mm");
+             replyMsg += \`----------------\\n📅 \${startStr} - \${endStr}\\n📝 \${data.title}\\n📍 \${data.location || '線上/無地點'}\\n\`;
+          });
+
+          batchResult.ignored.forEach(title => {
+             replyMsg += \`----------------\\n(已忽略重複行程：\${title})\\n\`;
           });
           
-          if (addedCount > 0) {
+          if (batchResult.added.length > 0) {
             const reminderText = REMINDER_OFFSETS.map(min => {
               if (min >= 1440) return \`前 \${Math.floor(min/1440)} 天\`;
               if (min >= 60) return \`前 \${(min/60).toFixed(1).replace('.0','')} 小時\`;
               return \`前 \${min} 分鐘\`;
             }).join("、");
-            replyMsg += \`\\n🔔 機器人將在活動\${reminderText}通知您。\`;
-          } else {
+            replyMsg += \`\\n🔔 機器人將在活動 \${reminderText} 通知您。\`;
+          } else if (batchResult.ignored.length > 0 && batchResult.added.length === 0) {
             replyMsg += "\\n(所有行程均已存在，無需新增)";
           }
           
-          if (event.message.type === 'image') { pushLineMessage(userId, replyMsg); }
-          else { replyLine(replyToken, replyMsg); }
+          // Step 4: 發送最終結果
+          // 如果是圖片，只能用 Push (因為 Reply 用過了)
+          if (event.message.type === 'image') { 
+            pushLineMessage(userId, replyMsg); 
+          } else { 
+            replyLine(replyToken, replyMsg); 
+          }
         } else {
-           const failMsg = "無法辨識行程。請確認含有日期(如1/9)與時間。";
-           if (event.message.type === 'image') { pushLineMessage(userId, failMsg); }
-           else { replyLine(replyToken, failMsg); }
+           const msg = "無法辨識行程。請確認含有日期(如1/9)與時間。";
+           if (event.message.type === 'image') pushLineMessage(userId, msg);
+           else replyLine(replyToken, msg);
         }
+      } catch (err) {
+        Logger.log(err);
+        const errMsg = "❌ 系統錯誤：" + err.message;
+        if (event.message.type === 'image') pushLineMessage(userId, errMsg);
+        else replyLine(replyToken, errMsg);
       }
-    } catch (err) {
-      Logger.log(err);
-      const errMsg = "❌ 錯誤：" + err.message;
-      if (event.message.type === 'image') { pushLineMessage(userId, errMsg); }
-      else { replyLine(replyToken, errMsg); }
     }
   }
 }
 
-// ================= OCR 核心 =================
+// ================= v4.4 批次處理與強制排序 =================
+function processEventsBatch(userId, newEvents) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "建立時間"]);
+    sheet.setFrozenRows(1);
+  }
+
+  // 讀取現有資料建立指紋
+  const existingData = sheet.getDataRange().getValues();
+  const existingSignatures = new Set();
+  
+  for (let i = 1; i < existingData.length; i++) {
+    const row = existingData[i];
+    let rowTime = row[4];
+    if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); }
+    
+    if (!isNaN(rowTime.getTime())) {
+       // 指紋：時間(分鐘級)_標題
+       const timeKey = Math.floor(rowTime.getTime() / 60000);
+       existingSignatures.add(\`\${timeKey}_\${row[5]}\`);
+    }
+  }
+
+  const rowsToAdd = [];
+  const addedEvents = [];
+  const ignoredTitles = [];
+
+  newEvents.forEach(event => {
+    const eventTimeKey = Math.floor(event.startObj.getTime() / 60000);
+    const signature = \`\${eventTimeKey}_\${event.title}\`;
+
+    if (existingSignatures.has(signature)) {
+      ignoredTitles.push(event.title);
+    } else {
+      rowsToAdd.push([
+        userId,
+        event.date,
+        event.timeStart,
+        event.timeEnd,
+        event.startObj,
+        event.title,
+        event.location,
+        "", 
+        new Date()
+      ]);
+      
+      try { createCalendarEvent(event); } 
+      catch (e) { Logger.log("日曆寫入失敗: " + e.message); }
+      
+      addedEvents.push(event);
+      existingSignatures.add(signature);
+    }
+  });
+
+  if (rowsToAdd.length > 0) {
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow + 1, 1, rowsToAdd.length, rowsToAdd[0].length).setValues(rowsToAdd);
+    
+    // [v4.4 重點] 強制存檔 (Flush) 後再執行排序
+    SpreadsheetApp.flush(); 
+    
+    // 重新取得全表範圍進行排序 (確保包含新資料)
+    const fullRange = sheet.getDataRange();
+    if (fullRange.getNumRows() > 1) {
+       // 從第2列開始排，排第5欄(完整時間)
+       sheet.getRange(2, 1, fullRange.getNumRows() - 1, fullRange.getNumColumns()).sort({column: 5, ascending: true});
+    }
+  }
+
+  return { added: addedEvents, ignored: ignoredTitles };
+}
+
 function handleImageOCR(messageId) {
   const url = \`https://api-data.line.me/v2/bot/message/\${messageId}/content\`;
   const response = UrlFetchApp.fetch(url, { 'headers': { 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN } });
   const blob = response.getBlob();
   const resource = { title: "temp_ocr_" + new Date().getTime(), mimeType: blob.getContentType() };
   let file, attempts = 0;
-  while (attempts < 5) {
+  const maxAttempts = 3; 
+  while (attempts < maxAttempts) {
     try { file = Drive.Files.insert(resource, blob, { ocr: true }); break; } 
     catch (e) { 
       attempts++; 
-      if(attempts>=5) throw new Error("OCR 服務忙碌，請稍後再試。");
-      Utilities.sleep(attempts * 3000); 
+      if(attempts >= maxAttempts) throw new Error("OCR 服務忙碌 (" + e.message + ")，請稍後再試。");
+      Utilities.sleep(1500); // 稍微等待
     }
   }
   const text = DocumentApp.openById(file.id).getBody().getText();
@@ -321,7 +425,6 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// ================= 狀態機解析器 V3.5 =================
 function parseFlexibleScheduleV3(text) {
   text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/⋅/g, " ").replace(/[()（）]/g, " "); 
   const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
@@ -417,57 +520,20 @@ function parseFlexibleScheduleV3(text) {
   return { status: 'success', data: results };
 }
 
-// ================= Google Sheet 儲存與排序 (v3.9.1 修正) =================
-function saveToSheet(userId, data) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  let sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) { sheet = ss.insertSheet(SHEET_NAME); sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "建立時間"]); }
-  
-  // 防重複檢查 (深度比對)
-  const existingData = sheet.getDataRange().getValues();
-  for (let i = 1; i < existingData.length; i++) {
-    const row = existingData[i];
-    let rowTime = row[4];
-    if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); } // 強制轉型
-    
-    if (!isNaN(rowTime.getTime())) {
-         // 容許 60 秒誤差
-         if (Math.abs(rowTime.getTime() - data.startObj.getTime()) < 60000 && row[5] === data.title) {
-             return true; 
-         }
-    }
-  }
-
-  sheet.appendRow([userId, data.date, data.timeStart, data.timeEnd, data.startObj, data.title, data.location, "", new Date()]);
-  
-  // [修正] 強制寫入後再排序
-  SpreadsheetApp.flush(); 
-
-  if (sheet.getLastRow() > 1) {
-    const range = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
-    range.sort({column: 5, ascending: true});
-  }
-  return false; 
-}
-
 function createCalendarEvent(data) {
   CalendarApp.getCalendarById(CALENDAR_ID).createEvent(data.title, data.startObj, data.endObj, { description: \`地點/連結: \${data.location}\\n(時光秘書)\`, location: data.location });
 }
 
-// ================= 觸發器 =================
 function checkReminders() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) return;
-
   const now = new Date();
   if (now.getHours() === 4 && now.getMinutes() < 15) { performDailyMaintenance(ss, sheet); }
-
   const dataRange = sheet.getDataRange();
   const values = dataRange.getValues();
   const maxReminderMin = Math.max(...REMINDER_OFFSETS);
   const maxLookAheadTime = new Date(now.getTime() + (maxReminderMin + 60) * 60 * 1000); 
-
   for (let i = 1; i < values.length; i++) {
     const row = values[i];
     const userId = row[0];
@@ -475,9 +541,7 @@ function checkReminders() {
     const title = row[5];
     const location = row[6];
     let notifiedStatus = row[7] ? String(row[7]) : ""; 
-    
     if (eventTime > maxLookAheadTime) { break; }
-
     let needUpdate = false;
     REMINDER_OFFSETS.forEach(offsetMin => {
       if (notifiedStatus.includes(\`|\${offsetMin}|\`)) return;

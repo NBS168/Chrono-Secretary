@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v5.0 全文結構化判讀版</p>
+                <p class="text-blue-100 text-sm mt-1">v5.1 完美終極版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,15 +26,15 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v5.0 重大更新：全文結構化判讀</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v5.1 完美終極版</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                捨棄了舊版的逐行讀取模式，改用<b>「先讀完全文、再智慧分群」</b>的演算法。這能完美處理「整月行程表」、「標題在日期上方」以及「多種格式混雜」的複雜資料。
+                修正了連續行程標題可能沾黏的問題，結合了結構化分析與智慧前視技術，是目前最穩定、準確的版本。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🧠 <b>結構化分析：</b>先掃描全文找出所有日期錨點，再前後關聯文字，準確度大幅提升。</li>
-                <li>🔄 <b>雙向抓取：</b>無論標題在日期上面或下面，都能精準歸位。</li>
-                <li>⚡ <b>非同步架構：</b>維持秒回+推播機制，處理大量資料也不會逾時。</li>
-                <li>🛡️ <b>完整防護：</b>保留 OCR 重試、精準防重複、民國年支援。</li>
+                <li>👀 <b>智慧斷句：</b>自動預判下一行是否為日期，精準切割標題與內容。</li>
+                <li>⚡ <b>非同步架構：</b>秒回「處理中」，後台運算完推播結果，絕不逾時。</li>
+                <li>📊 <b>強制排序：</b>寫入後強制存檔並排序。</li>
+                <li>🛡️ <b>完整防護：</b>OCR 重試、精準防重複、民國年支援。</li>
             </ul>
         </section>
 
@@ -130,7 +130,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v5.0)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v5.1)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -176,11 +176,11 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v5.0 (全文結構化判讀版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v5.1 (完美終極版)
  * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. 全新解析核心：讀完全文後再進行結構化判斷 (雙向抓取)，完美支援多日行程與複雜排版
- * 2. 繼承 v4.4 的非同步處理 (秒回+推播)、OCR 重試、精準防重複、強制排序
+ * 1. 核心升級：結構化分析 + 智慧前視 (Lookahead)，解決標題沾黏與漏抓問題
+ * 2. 架構：非同步回應 (防逾時) + 強制排序 + 精準防重複
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -193,7 +193,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v5.0 結構化判讀版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v5.1 完美終極版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -251,7 +251,7 @@ function doPost(e) {
     // Step 3: 解析與寫入
     if (userMessage) {
       try {
-        // [v5.0] 使用全新的結構化解析器
+        // [v5.1] 使用終極版解析器
         const result = parseScheduleV5(userMessage);
         
         if (result.status === 'error') {
@@ -393,7 +393,7 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v5.0 核心] 全文結構化判讀解析器
+// [v5.1 核心] 結構化判讀 + 智慧前視
 function parseScheduleV5(text) {
   // 1. 預處理
   text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/⋅/g, " ").replace(/[()（）]/g, " ");
@@ -409,17 +409,17 @@ function parseScheduleV5(text) {
   const results = [];
 
   // --- 階段一：掃描全結構 (找出所有日期錨點) ---
-  const eventsMap = []; // 存放 { dateStr, contentLines: [], timeFound: false }
+  const eventsMap = []; 
   
   // 臨時變數
   let currentGroup = null;
-  let orphans = []; // 尚未歸屬的行 (可能是標題)
+  let orphans = []; 
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.match(/^https?:\\/\\//) || line.match(/^(時間|日期|行程表|July|講師)/i)) continue;
 
-    // 時間防呆 (如果是純數字且非年份，略過)
+    // 時間防呆
     const pureNumber = line.match(/^(\\d{3,4})$/);
     if (pureNumber) {
        const val = parseInt(pureNumber[1]);
@@ -446,9 +446,9 @@ function parseScheduleV5(text) {
         timeInfo: null
       };
       
-      // [關鍵] 檢查是否有孤兒行 (標題在日期上面)
-      // 策略：如果孤兒行不是上一組的結尾，就歸給這一組
+      // [關鍵修正] 檢查 orphans 應該歸屬給誰
       if (orphans.length > 0) {
+         // 這裡的 orphan 極大機率是這個新日期的標題 (Title before Date)
          currentGroup.lines.push(...orphans);
          orphans = [];
       }
@@ -462,8 +462,23 @@ function parseScheduleV5(text) {
     } else {
       // 不是日期
       if (currentGroup) {
-        // 已經有當前日期，歸屬給它 (日期下面的內容)
-        currentGroup.lines.push(line);
+        // [v5.1 智慧斷句] 檢查下一行是否為日期
+        // 如果下一行是日期，這行就不能歸給 currentGroup，而要變成 orphan (下一個群組的標題)
+        let nextLineIsDate = false;
+        if (i + 1 < lines.length) {
+           const nextLine = lines[i+1];
+           const nextDateMatch = nextLine.match(/(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
+           const nextLooksLikeTime = nextLine.match(/\\d{1,2}\\s*[-~]\\s*\\d{1,2}/);
+           if (nextDateMatch && !nextLooksLikeTime) {
+              nextLineIsDate = true;
+           }
+        }
+
+        if (nextLineIsDate) {
+           orphans.push(line); // 這是下一個行程的標題
+        } else {
+           currentGroup.lines.push(line); // 這是當前行程的內容
+        }
       } else {
         // 還沒有日期，暫存為孤兒 (可能是標題在日期上面)
         orphans.push(line);

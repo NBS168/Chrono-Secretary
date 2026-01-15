@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v5.1 完美終極版</p>
+                <p class="text-blue-100 text-sm mt-1">v5.3 萬用格式增強版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,15 +26,15 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v5.1 完美終極版</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v5.3 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                修正了連續行程標題可能沾黏的問題，結合了結構化分析與智慧前視技術，是目前最穩定、準確的版本。
+                大幅增強了對非標準日期與時間格式的支援，解決了軍事時間、小數點日期、列表編號等無法辨識的問題。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>👀 <b>智慧斷句：</b>自動預判下一行是否為日期，精準切割標題與內容。</li>
-                <li>⚡ <b>非同步架構：</b>秒回「處理中」，後台運算完推播結果，絕不逾時。</li>
-                <li>📊 <b>強制排序：</b>寫入後強制存檔並排序。</li>
-                <li>🛡️ <b>完整防護：</b>OCR 重試、精準防重複、民國年支援。</li>
+                <li>📅 <b>萬用日期：</b>支援 2026.01.17、1. 1月16日、日期：2026/1/17 等格式。</li>
+                <li>🕒 <b>軍事時間：</b>支援 1400-1700、0630-0730、(1930-2030) 等無冒號時間。</li>
+                <li>📝 <b>資訊整合：</b>自動擷取「講師、費用、對象」等資訊至備註欄。</li>
+                <li>⚡ <b>核心保留：</b>非同步秒回、強制排序、防重複機制全數保留。</li>
             </ul>
         </section>
 
@@ -130,7 +130,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v5.1)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v5.3)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -176,11 +176,12 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v5.1 (完美終極版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v5.3 (萬用格式增強版)
  * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. 核心升級：結構化分析 + 智慧前視 (Lookahead)，解決標題沾黏與漏抓問題
- * 2. 架構：非同步回應 (防逾時) + 強制排序 + 精準防重複
+ * 1. 支援軍事時間 (1400-1700), 小數點日期 (2026.01.17)
+ * 2. 忽略列表編號 (1. 1月...) 與前綴 (日期：)
+ * 3. 自動整合講師、費用等資訊至備註
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -193,7 +194,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v5.1 完美終極版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v5.3 萬用格式版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -251,7 +252,7 @@ function doPost(e) {
     // Step 3: 解析與寫入
     if (userMessage) {
       try {
-        // [v5.1] 使用終極版解析器
+        // [v5.3] 使用 v5.3 解析器
         const result = parseScheduleV5(userMessage);
         
         if (result.status === 'error') {
@@ -393,11 +394,17 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v5.1 核心] 結構化判讀 + 智慧前視
+// [v5.3 核心] 全文結構化 + 強力日期時間解析
 function parseScheduleV5(text) {
-  // 1. 預處理
-  text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)).replace(/⋅/g, " ").replace(/[()（）]/g, " ");
-  
+  // 1. 預處理：全形轉半形、移除干擾
+  text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+             .replace(/⋅/g, " ").replace(/[()（）]/g, " ")
+             .replace(/日期[:：]/g, "").replace(/時間[:：]/g, ""); // 移除前綴標籤
+             
+  // [v5.3] 正規化時間關鍵字
+  text = text.replace(/上午/g, "AM ").replace(/下午/g, "PM ")
+             .replace(/(AM|PM)[:：]?/gi, "$1 ");
+
   // 提取 URL
   const urlRegex = /(https?:\\/\\/[^\\s]+)/g;
   const links = text.match(urlRegex) || [];
@@ -411,15 +418,18 @@ function parseScheduleV5(text) {
   // --- 階段一：掃描全結構 (找出所有日期錨點) ---
   const eventsMap = []; 
   
-  // 臨時變數
   let currentGroup = null;
   let orphans = []; 
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.match(/^https?:\\/\\//) || line.match(/^(時間|日期|行程表|July|講師)/i)) continue;
+    let line = lines[i];
+    
+    // [v5.3] 忽略清單編號 (如 1. 1月...)
+    line = line.replace(/^\\d+\\.\\s*/, ""); 
 
-    // 時間防呆
+    if (line.match(/^https?:\\/\\//) || line.match(/^(行程表|July|講師)/i)) continue;
+
+    // 時間防呆 (僅略過)
     const pureNumber = line.match(/^(\\d{3,4})$/);
     if (pureNumber) {
        const val = parseInt(pureNumber[1]);
@@ -427,9 +437,9 @@ function parseScheduleV5(text) {
        if (!isYear) { continue; } 
     }
 
-    // 日期偵測 (錨點)
-    const dateMatch = line.match(/(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
-    const looksLikeTime = line.match(/\\d{1,2}\\s*[-~]\\s*\\d{1,2}/);
+    // [v5.3] 日期偵測 (支援 . / - 年月日)
+    const dateMatch = line.match(/(?:^|\\s)(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
+    const looksLikeTime = line.match(/\\d{1,2}\\s*[-~:]\\s*\\d{1,2}/);
 
     if (dateMatch && !looksLikeTime) {
       // 發現新日期錨點
@@ -439,48 +449,41 @@ function parseScheduleV5(text) {
       const d = String(dateMatch[3]).padStart(2, '0');
       const dateStr = \`\${y}-\${m}-\${d}\`;
 
-      // 建立新事件群組
       currentGroup = {
         date: dateStr,
         lines: [],
         timeInfo: null
       };
       
-      // [關鍵修正] 檢查 orphans 應該歸屬給誰
       if (orphans.length > 0) {
-         // 這裡的 orphan 極大機率是這個新日期的標題 (Title before Date)
          currentGroup.lines.push(...orphans);
          orphans = [];
       }
 
-      // 如果日期行本身還有剩餘文字 (如 1/1 新年)，也加入
       const remainingText = line.replace(dateMatch[0], "").trim();
       if (remainingText) currentGroup.lines.push(remainingText);
 
       eventsMap.push(currentGroup);
 
     } else {
-      // 不是日期
       if (currentGroup) {
-        // [v5.1 智慧斷句] 檢查下一行是否為日期
-        // 如果下一行是日期，這行就不能歸給 currentGroup，而要變成 orphan (下一個群組的標題)
+        // [v5.3] 智慧前視
         let nextLineIsDate = false;
         if (i + 1 < lines.length) {
-           const nextLine = lines[i+1];
-           const nextDateMatch = nextLine.match(/(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
-           const nextLooksLikeTime = nextLine.match(/\\d{1,2}\\s*[-~]\\s*\\d{1,2}/);
+           let nextLine = lines[i+1].replace(/^\\d+\\.\\s*/, "");
+           const nextDateMatch = nextLine.match(/(?:^|\\s)(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
+           const nextLooksLikeTime = nextLine.match(/\\d{1,2}\\s*[-~:]\\s*\\d{1,2}/);
            if (nextDateMatch && !nextLooksLikeTime) {
               nextLineIsDate = true;
            }
         }
 
         if (nextLineIsDate) {
-           orphans.push(line); // 這是下一個行程的標題
+           orphans.push(line); 
         } else {
-           currentGroup.lines.push(line); // 這是當前行程的內容
+           currentGroup.lines.push(line); 
         }
       } else {
-        // 還沒有日期，暫存為孤兒 (可能是標題在日期上面)
         orphans.push(line);
       }
     }
@@ -494,30 +497,53 @@ function parseScheduleV5(text) {
     let foundTime = false;
 
     group.lines.forEach(line => {
-      // 1. 找時間
-      const complexTime = line.match(/(?:^|\\s)(\\d{1,2}|\\d{4})(:(\\d{2}))?\\s*[-~]\\s*(\\d{1,2}|\\d{4})(:(\\d{2}))?/);
-      const singleTime = line.match(/(?:^|\\s)(\\d{1,2}|\\d{4})(:(\\d{2}))?(?:$|\\s|點)/);
+      // [v5.3] 萬用時間解析 (軍事時間、無冒號、括號)
+      // 1. 範圍 (1400-1700, 06:30-0730)
+      const rangeTime = line.match(/(\\d{1,2}:?\\d{2}|\\d{4})\\s*[-~]\\s*(\\d{1,2}:?\\d{2}|\\d{4})/);
+      // 2. 單一 (09:00, 1400, 9點)
+      const singleTime = line.match(/(\\d{1,2}:?\\d{2}|\\d{4})(?:\\s*點|$)/);
+      
       const allDayMatch = line.match(/(整天|全天)/);
       const halfDayMatch = line.match(/(上午|下午)?\\s*半天/);
 
       if (!foundTime) {
-        if (complexTime) {
-           let sRaw = complexTime[1];
-           if (sRaw.length === 4) { startH = parseInt(sRaw.substring(0,2)); startM = parseInt(sRaw.substring(2,4)); } 
-           else { startH = parseInt(sRaw); startM = complexTime[3] ? parseInt(complexTime[3]) : 0; }
-           let eRaw = complexTime[4];
-           if (eRaw.length === 4) { endH = parseInt(eRaw.substring(0,2)); endM = parseInt(eRaw.substring(2,4)); } 
-           else { endH = parseInt(eRaw); endM = complexTime[6] ? parseInt(complexTime[6]) : 0; }
+        if (rangeTime) {
+           const parseRaw = (raw) => {
+             raw = raw.replace(":", "");
+             if (raw.length === 4) return { h: parseInt(raw.substring(0,2)), m: parseInt(raw.substring(2,4)) };
+             if (raw.length <= 2) return { h: parseInt(raw), m: 0 };
+             return { h: 9, m: 0 }; // fallback
+           };
+           
+           const s = parseRaw(rangeTime[1]);
+           const e = parseRaw(rangeTime[2]);
+           
+           startH = s.h; startM = s.m;
+           endH = e.h; endM = e.m;
+           
+           if (line.match(/PM/i) && startH < 12) { startH += 12; if(endH < 12) endH += 12; }
+           
            foundTime = true;
-           line = line.replace(complexTime[0], "").trim(); // 消費掉時間
+           line = line.replace(rangeTime[0], "").trim();
         } else if (singleTime && !line.match(/[-~]/)) { 
-           let val = parseInt(singleTime[1]);
-           if ((singleTime[1].length === 4 && val < 2400) || singleTime[1].length <= 2) {
-             if (singleTime[1].length === 4) { startH = parseInt(singleTime[1].substring(0,2)); startM = parseInt(singleTime[1].substring(2,4)); }
-             else { startH = val; startM = singleTime[3] ? parseInt(singleTime[3]) : 0; }
-             endH = startH + 1; endM = startM;
+           // 避免誤判年份 (如 2026)
+           let val = parseInt(singleTime[1].replace(":", ""));
+           if (val < 2400 && val > 2030 || val < 2020) {
+             let h=0, m=0;
+             if (singleTime[1].includes(":") || singleTime[1].length === 4) {
+                let raw = singleTime[1].replace(":", "");
+                h = parseInt(raw.substring(0,2));
+                m = parseInt(raw.substring(2,4));
+             } else {
+                h = parseInt(singleTime[1]);
+             }
+             
+             if (line.match(/PM/i) && h < 12) h += 12;
+             
+             startH = h; startM = m;
+             endH = h + 1; endM = m;
              foundTime = true;
-             location += "(未指定結束時間)"; // 標註
+             location += "(未指定結束時間)"; 
              line = line.replace(singleTime[0], "").trim();
            }
         } else if (allDayMatch) { 
@@ -530,10 +556,13 @@ function parseScheduleV5(text) {
         }
       }
 
-      // 2. 找地點/標題
+      // 2. 找地點/標題/其他資訊
       if (line.length > 0 && !line.match(/^[日一二三四五六]$/)) {
-         if (line.includes("地點") || line.includes("室")) {
+         if (line.includes("地點") || line.includes("室") || line.includes("教室")) {
             location = (location + " " + line).trim();
+         } else if (line.match(/^(講師|費用|對象|講題)/)) {
+            // [v5.3] 資訊整合至備註 (利用 Location 欄位顯示)
+            location = (location + "\\n" + line).trim();
          } else {
             title = (title + " " + line).trim();
          }
@@ -542,11 +571,9 @@ function parseScheduleV5(text) {
 
     if (!title) title = "未命名行程";
 
-    // 構建物件
     const startObj = new Date(\`\${group.date}T\${String(startH).padStart(2,'0')}:\${String(startM).padStart(2,'0')}:00\`);
     const endObj = new Date(\`\${group.date}T\${String(endH).padStart(2,'0')}:\${String(endM).padStart(2,'0')}:00\`);
     
-    // 分配連結
     let assignedLink = "";
     if (links.length > 0) {
         if (links.length === 1) assignedLink = links[0];

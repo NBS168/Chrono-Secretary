@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-indigo-100 text-sm mt-1">v8.0 雙向管理版 (刪除與防呆)</p>
+                <p class="text-indigo-100 text-sm mt-1">v8.1 區塊掃描版 (多行地點修復)</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,19 +26,14 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v8.0 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v8.1 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                新增了刪除指令與重複檢查，讓行程管理更嚴謹。
+                解決了地點寫在日期下一行導致無法抓取的問題。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🛡️ <b>重複行程警示：</b>當日期、時間與標題完全相同時，系統會自動略過並回報「已存在」，防止重複建立。</li>
-                <li>🗑️ <b>刪除指令：</b>
-                    <ul class="list-none ml-6 mt-1 text-sm text-gray-500">
-                        <li>• 刪除特定關鍵字：<code>刪除 1/20 開會</code></li>
-                        <li>• 刪除當天所有行程：<code>刪除 1/20</code></li>
-                    </ul>
-                </li>
-                <li>📘 <b>HELP 更新：</b>輸入 <code>HELP</code> 可查看刪除指令的教學。</li>
+                <li>📍 <b>多行地點抓取：</b>當日期下方跟著地址（如：台北市... 樓... 教室...）時，會自動識別並併入地點欄位。</li>
+                <li>🛡️ <b>區塊掃描技術：</b>智慧判斷行程區塊的結束點，不會把下一個行程的日期誤判為內容。</li>
+                <li>✅ <b>完整繼承：</b>包含 v8.0 的刪除指令、重複防呆與查詢功能。</li>
             </ul>
         </section>
 
@@ -134,7 +129,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v8.0)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v8.1)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -180,13 +175,12 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v8.0 (雙向管理版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v8.1 (區塊掃描版)
  * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. [v8.0] 刪除指令：支援「刪除 1/20」或「刪除 1/20 開會」指令
- * 2. [v8.0] 重複防呆：完全相同的行程 (日期/時間/標題) 會自動略過並提示
- * 3. [v7.0] 查詢指令：支援 "1/20"、"今天"
- * 4. [v6.1] 智慧斷詞與全域繼承
+ * 1. [v8.1] 區塊掃描：解決日期與地點分行寫的問題，自動將下方的地址/教室併入行程
+ * 2. [v8.0] 刪除與防呆
+ * 3. [v7.0] 查詢指令
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -199,7 +193,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v8.0 管理版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v8.1 區塊版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -248,7 +242,6 @@ function doPost(e) {
     } else if (event.message.type === 'text') {
       userMessage = event.message.text;
       
-      // [v8.0] 優先檢查是否為指令 (查詢/刪除/Help)
       if (handleUserCommand(userMessage, replyToken, userId)) {
         return; 
       }
@@ -257,7 +250,7 @@ function doPost(e) {
 
     if (userMessage) {
       try {
-        const result = parseScheduleV6(userMessage);
+        const result = parseScheduleV8(userMessage); // v8.1 internal
         
         if (result.status === 'error') {
            if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
@@ -280,7 +273,6 @@ function doPost(e) {
              });
           }
 
-          // [v8.0] 明確顯示重複略過的項目
           if (batchResult.ignored.length > 0) {
              replyMsg += \`\\n⚠️ 發現 \${batchResult.ignored.length} 筆重複行程 (已自動略過)：\\n\`;
              batchResult.ignored.forEach(title => {
@@ -323,7 +315,6 @@ function doPost(e) {
 function handleUserCommand(text, replyToken, userId) {
   const lowerText = text.toLowerCase().trim();
 
-  // 1. HELP 指令
   if (lowerText === 'help' || lowerText === '功能' || lowerText === '指令' || lowerText === '說明' || lowerText === '怎麼用' || lowerText === '教學') {
     const helpMsg = "🤖 時光秘書使用說明 v8.0：\\n\\n" +
                     "1️⃣ 【新增行程】\\n直接貼上文字或圖片。\\n範例：「1/20 14:00 開會」\\n(若行程已存在會自動提示)\\n\\n" +
@@ -338,14 +329,12 @@ function handleUserCommand(text, replyToken, userId) {
     return true;
   }
 
-  // 2. 刪除指令 [v8.0]
   if (lowerText.startsWith("刪除") || lowerText.startsWith("取消")) {
      const delResult = deleteScheduleByCommand(text);
      replyLine(replyToken, delResult);
      return true;
   }
 
-  // 3. 查詢判斷
   const isExplicitQuery = text.match(/(查詢|行程|安排|有什麼|幾號)/);
   const isShortDate = text.length < 10 && text.match(/(\\d{1,2}[/-]\\d{1,2}|\\d{1,2}月)/);
   const isKeyword = text.match(/^(今天|明天|後天)$/);
@@ -400,10 +389,7 @@ function handleUserCommand(text, replyToken, userId) {
   return false;
 }
 
-// [v8.0] 刪除行程邏輯
 function deleteScheduleByCommand(text) {
-  // 解析指令 "刪除 1/20 開會" -> dateStr="1/20", keyword="開會"
-  // 先嘗試抓日期
   const today = new Date();
   const dateMatch = text.match(/(\\d{1,2})\\s*[-/月]\\s*(\\d{1,2})/);
   
@@ -417,7 +403,6 @@ function deleteScheduleByCommand(text) {
   if (today.getMonth() + 1 >= 11 && m <= 2) y++;
   const targetDate = new Date(y, m - 1, d);
   
-  // 抓取關鍵字：移除 "刪除" 和 "日期" 後剩下的文字
   let keyword = text.replace(/刪除|取消/g, "").replace(dateMatch[0], "").replace("日", "").trim();
 
   const ss = SpreadsheetApp.openById(SHEET_ID);
@@ -425,9 +410,6 @@ function deleteScheduleByCommand(text) {
   if (!sheet) return "❌ 找不到行程表。";
 
   const data = sheet.getDataRange().getValues();
-  const rowsToDelete = [];
-  
-  // 從後面往前找，避免刪除後 index 跑掉
   let deletedCount = 0;
   let deletedInfo = "";
 
@@ -440,8 +422,6 @@ function deleteScheduleByCommand(text) {
          rowDate.getFullYear() === targetDate.getFullYear()) {
          
          const rowTitle = String(data[i][5]);
-         
-         // 如果有關鍵字，必須匹配標題；如果沒關鍵字，刪除當天所有
          if (keyword === "" || rowTitle.includes(keyword)) {
              sheet.deleteRow(i + 1);
              deletedCount++;
@@ -515,15 +495,13 @@ function processEventsBatch(userId, newEvents) {
   const existingData = sheet.getDataRange().getValues();
   const existingSignatures = new Set();
   
-  // [v8.0] 建立現有行程指紋 (日期_開始時間_標題)
   for (let i = 1; i < existingData.length; i++) {
     const row = existingData[i];
-    let rowTime = row[4]; // Date Object
+    let rowTime = row[4];
     let rowTitle = row[5];
     if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); }
     
     if (!isNaN(rowTime.getTime())) {
-       // 指紋格式: 2026-01-20_14:00_標題
        const timeStr = Utilities.formatDate(rowTime, Session.getScriptTimeZone(), "yyyy-MM-dd_HH:mm");
        existingSignatures.add(\`\${timeStr}_\${rowTitle}\`);
     }
@@ -534,7 +512,6 @@ function processEventsBatch(userId, newEvents) {
   const ignoredTitles = [];
 
   newEvents.forEach(event => {
-    // 產生新行程指紋
     const eventTimeStr = Utilities.formatDate(event.startObj, Session.getScriptTimeZone(), "yyyy-MM-dd_HH:mm");
     const signature = \`\${eventTimeStr}_\${event.title}\`;
 
@@ -555,7 +532,7 @@ function processEventsBatch(userId, newEvents) {
       try { createCalendarEvent(event); } 
       catch (e) { Logger.log("日曆寫入失敗: " + e.message); }
       addedEvents.push(event);
-      existingSignatures.add(signature); // 更新指紋，避免同批次重複
+      existingSignatures.add(signature);
     }
   });
 
@@ -592,8 +569,8 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v6.1 核心] 全域繼承 + 智慧斷詞
-function parseScheduleV6(text) {
+// [v8.1 核心] 區塊掃描 + 全域繼承 + 智慧斷詞
+function parseScheduleV8(text) {
   text = text.replace(/([\\u4e00-\\u9fa5])(\\d)/g, "$1 $2")
              .replace(/(\\d)([\\u4e00-\\u9fa5])/g, "$1 $2");
 
@@ -613,6 +590,7 @@ function parseScheduleV6(text) {
   let defaultTitle = "";
   let defaultTime = { startH: 9, startM: 0, endH: 10, endM: 0, valid: false };
 
+  // Step 1: Find first date line
   let firstDateLineIndex = -1;
   for (let i = 0; i < lines.length; i++) {
      datePattern.lastIndex = 0;
@@ -630,6 +608,7 @@ function parseScheduleV6(text) {
 
   if (firstDateLineIndex === -1 && lines.length === 0) return { status: 'error', message: "未偵測到日期。" };
   
+  // Header parsing
   const headerLines = (firstDateLineIndex === -1) ? lines : lines.slice(0, firstDateLineIndex);
   headerLines.forEach(line => {
       const t = extractTimeFromLine(line);
@@ -643,67 +622,109 @@ function parseScheduleV6(text) {
 
   const results = [];
   
-  lines.forEach(line => {
+  // Step 2: Iterate blocks
+  for (let i = firstDateLineIndex; i < lines.length; i++) {
+     let line = lines[i];
+     
+     // Check if line has date
      let dateMatches = [];
      let match;
      datePattern.lastIndex = 0;
      while ((match = datePattern.exec(line)) !== null) {
         const pureNumber = match[0].trim().match(/^(\\d{3,4})$/);
-        if (pureNumber) {
-           const val = parseInt(pureNumber[1]);
-           if (!(val >= 2020 && val <= 2035) && !(val >= 100 && val <= 199)) continue;
+        if (!pureNumber && !((parseInt(match[1]) || 2026) < 2020)) {
+           dateMatches.push(match);
         }
-        dateMatches.push(match);
+     }
+     
+     if (dateMatches.length === 0) continue;
+
+     // Extract local info from this date line
+     let localTime = extractTimeFromLine(line);
+     let contentText = line;
+     dateMatches.forEach(m => { contentText = contentText.replace(m[0], " "); });
+     if (localTime.found) { contentText = contentText.replace(localTime.raw, " "); }
+     let localTitle = contentText.replace(/^\\s*([(*]?\\d+[.)*\\]]?|[*•-])\\s*/, "")
+                                 .replace(/https?:\\/\\/[^\\s]+/g, "")
+                                 .trim();
+
+     let localLocation = "";
+
+     // Look ahead for location/details
+     let j = i + 1;
+     while (j < lines.length) {
+        let nextLine = lines[j];
+        
+        // Check if nextLine has date
+        datePattern.lastIndex = 0;
+        let nextHasDate = false;
+        if (datePattern.test(nextLine)) {
+            // Strict check
+            let temp = nextLine.match(/(?:^|[^\\d:：])(?:(\\d{2,4})[./年-])?\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
+            if (temp && !temp[0].trim().match(/^(\\d{3,4})$/)) {
+               nextHasDate = true;
+            }
+        }
+        
+        if (nextHasDate) break;
+
+        // Collect info
+        if (nextLine.match(/(地點|地址|位置|教室|會議室|樓|號|路|街|區|市|縣|http|大樓)/)) {
+             localLocation += " " + nextLine;
+        } else if (nextLine.match(/^(講師|費用|對象|講題)/)) {
+             localLocation += " " + nextLine; 
+        } else {
+             // Append other lines to location/desc for completeness
+             localLocation += " " + nextLine; 
+        }
+        j++;
      }
 
-     if (dateMatches.length > 0) {
-        let localTime = extractTimeFromLine(line);
-        let contentText = line;
+     // Finalize title/location
+     let finalTitle = localTitle ? (defaultTitle + " (" + localTitle + ")") : defaultTitle;
+     if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle;
+     
+     // Logic fix: if line 1 has title but user wants that to be main title
+     if (defaultTitle === "未命名行程 " && localTitle) finalTitle = localTitle;
+
+     localLocation = localLocation.trim();
+
+     let sH = localTime.found ? localTime.startH : defaultTime.startH;
+     let sM = localTime.found ? localTime.startM : defaultTime.startM;
+     let eH = localTime.found ? localTime.endH : defaultTime.endH;
+     let eM = localTime.found ? localTime.endM : defaultTime.endM;
+
+     dateMatches.forEach(m => {
+        let y;
+        if (m[1]) { y = parseInt(m[1]); if (y < 1000) y += 1911; } else { y = currentYear; }
+        const month = parseInt(m[2]);
+        const day = parseInt(m[3]);
         
-        dateMatches.forEach(m => { contentText = contentText.replace(m[0], " "); });
-        if (localTime.found) { contentText = contentText.replace(localTime.raw, " "); }
-        
-        let localTitle = contentText.replace(/^\\s*([(*]?\\d+[.)*\\]]?|[*•-])\\s*/, "")
-                                    .replace(/https?:\\/\\/[^\\s]+/g, "")
-                                    .trim();
-        
-        let finalTitle = localTitle ? (defaultTitle + " (" + localTitle + ")") : defaultTitle;
-        if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle;
+        if (!m[1]) {
+          const today = new Date();
+          if (today.getMonth() + 1 > month + 2) { y++; }
+        }
+        const mStr = String(month).padStart(2, '0');
+        const dStr = String(day).padStart(2, '0');
+        const dateStr = \`\${y}-\${mStr}-\${dStr}\`;
 
-        let sH = localTime.found ? localTime.startH : defaultTime.startH;
-        let sM = localTime.found ? localTime.startM : defaultTime.startM;
-        let eH = localTime.found ? localTime.endH : defaultTime.endH;
-        let eM = localTime.found ? localTime.endM : defaultTime.endM;
+        const startObj = new Date(\`\${dateStr}T\${String(sH).padStart(2,'0')}:\${String(sM).padStart(2,'0')}:00\`);
+        const endObj = new Date(\`\${dateStr}T\${String(eH).padStart(2,'0')}:\${String(eM).padStart(2,'0')}:00\`);
 
-        dateMatches.forEach(m => {
-           let y;
-           if (m[1]) { y = parseInt(m[1]); if (y < 1000) y += 1911; } else { y = currentYear; }
-           const month = parseInt(m[2]);
-           const day = parseInt(m[3]);
-           
-           if (!m[1]) {
-             const today = new Date();
-             if (today.getMonth() + 1 > month + 2) { y++; }
-           }
-           const mStr = String(month).padStart(2, '0');
-           const dStr = String(day).padStart(2, '0');
-           const dateStr = \`\${y}-\${mStr}-\${dStr}\`;
-
-           const startObj = new Date(\`\${dateStr}T\${String(sH).padStart(2,'0')}:\${String(sM).padStart(2,'0')}:00\`);
-           const endObj = new Date(\`\${dateStr}T\${String(eH).padStart(2,'0')}:\${String(eM).padStart(2,'0')}:00\`);
-
-           results.push({
-             date: dateStr,
-             timeStart: \`\${String(sH).padStart(2,'0')}:\${String(sM).padStart(2,'0')}\`,
-             timeEnd: \`\${String(eH).padStart(2,'0')}:\${String(eM).padStart(2,'0')}\`,
-             startObj: startObj,
-             endObj: endObj,
-             title: finalTitle,
-             location: "" 
-           });
+        results.push({
+          date: dateStr,
+          timeStart: \`\${String(sH).padStart(2,'0')}:\${String(sM).padStart(2,'0')}\`,
+          timeEnd: \`\${String(eH).padStart(2,'0')}:\${String(eM).padStart(2,'0')}\`,
+          startObj: startObj,
+          endObj: endObj,
+          title: finalTitle,
+          location: localLocation 
         });
-     }
-  });
+     });
+
+     // Move index
+     i = j - 1;
+  }
 
   return { status: 'success', data: results };
 }

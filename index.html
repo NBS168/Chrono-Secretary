@@ -13,11 +13,11 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <header class="bg-blue-600 text-white p-6 shadow-md">
+    <header class="bg-indigo-600 text-white p-6 shadow-md">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-blue-100 text-sm mt-1">v5.3 萬用格式增強版</p>
+                <p class="text-indigo-100 text-sm mt-1">v5.9 智慧自動聚類版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,29 +26,28 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v5.3 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v5.9 版本更新 (自行判斷模式)</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                大幅增強了對非標準日期與時間格式的支援，解決了軍事時間、小數點日期、列表編號等無法辨識的問題。
+                此版本改用「日期錨點聚類」技術，不需依賴固定格式，能自動判斷多個行程。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>📅 <b>萬用日期：</b>支援 2026.01.17、1. 1月16日、日期：2026/1/17 等格式。</li>
-                <li>🕒 <b>軍事時間：</b>支援 1400-1700、0630-0730、(1930-2030) 等無冒號時間。</li>
-                <li>📝 <b>資訊整合：</b>自動擷取「講師、費用、對象」等資訊至備註欄。</li>
-                <li>⚡ <b>核心保留：</b>非同步秒回、強制排序、防重複機制全數保留。</li>
+                <li>🧠 <b>自動區域判斷：</b>以「日期」為中心，自動吸附上方(標題)與下方(連結/描述)的文字，不再受限於排列順序。</li>
+                <li>🔗 <b>精準連結配對：</b>連結會跟隨最近的日期，確保多行程時連結不會錯置。</li>
+                <li>✨ <b>無痕格式支援：</b>無論是否有列表符號 (*, 1.) 或雜亂的換行，皆能自動整理。</li>
             </ul>
         </section>
 
         <!-- 步驟 1: LINE 設定 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">1</div>
+                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">1</div>
                 <h2 class="text-xl font-bold text-gray-800">建立 LINE 官方帳號與取得 Token</h2>
             </div>
             <div class="pl-10 space-y-6 text-sm text-gray-600">
                 <div>
-                    <h3 class="font-bold text-blue-700 mb-2"><i class="fa-solid fa-key mr-1"></i> 取得 Channel Access Token</h3>
+                    <h3 class="font-bold text-indigo-700 mb-2"><i class="fa-solid fa-key mr-1"></i> 取得 Channel Access Token</h3>
                     <ul class="list-decimal ml-5 space-y-2">
-                        <li>前往 <a href="https://developers.line.biz/zh-hant/" target="_blank" class="text-blue-600 hover:underline font-bold">LINE Developers Console</a>。</li>
+                        <li>前往 <a href="https://developers.line.biz/zh-hant/" target="_blank" class="text-indigo-600 hover:underline font-bold">LINE Developers Console</a>。</li>
                         <li>在 <b>Messaging API</b> 分頁最下方產生 Token。</li>
                         <li>記得關閉 <b>Auto-reply messages (自動回應)</b>。</li>
                     </ul>
@@ -56,30 +55,30 @@
             </div>
             <div class="mt-6 pl-10 border-t pt-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Channel Access Token：</label>
-                <input type="text" id="inputToken" placeholder="例如：eyJhbGciOiJIUzI1NiJ9..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                <input type="text" id="inputToken" placeholder="例如：eyJhbGciOiJIUzI1NiJ9..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
             </div>
         </section>
 
         <!-- 步驟 2: Google Sheet 設定 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">2</div>
+                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">2</div>
                 <h2 class="text-xl font-bold text-gray-800">準備 Google Sheet</h2>
             </div>
             <div class="pl-10 space-y-3 text-sm text-gray-600">
-                <p>1.建立一個新的 <a href="https://sheets.new" target="_blank" class="text-blue-600 hover:underline">Google Sheet</a>。</p>
+                <p>1.建立一個新的 <a href="https://sheets.new" target="_blank" class="text-indigo-600 hover:underline">Google Sheet</a>。</p>
                 <p>2.複製網址列中的 ID。</p>
             </div>
             <div class="mt-4 pl-10">
                 <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Google Sheet ID：</label>
-                <input type="text" id="inputSheetId" placeholder="例如：1qo5L0zcjQweI7xV8cqE-3BByS0PMq-d6aAVfQzs20bo" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                <input type="text" id="inputSheetId" placeholder="例如：1qo5L0zcjQweI7xV8cqE-3BByS0PMq-d6aAVfQzs20bo" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
             </div>
         </section>
 
         <!-- 步驟 3: 設定提醒通知 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">3</div>
+                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">3</div>
                 <h2 class="text-xl font-bold text-gray-800">設定提醒通知時間 (可選)</h2>
             </div>
             <div class="pl-10 text-sm text-gray-600">
@@ -89,27 +88,27 @@
                     <div class="flex items-center p-3 bg-gray-100 rounded border border-gray-300">
                         <i class="fa-solid fa-lock text-gray-400 mr-3"></i>
                         <span class="font-bold text-gray-700 w-24">基本提醒</span>
-                        <span class="text-blue-600 font-bold bg-blue-100 px-2 py-1 rounded text-xs">前 1 小時</span>
+                        <span class="text-indigo-600 font-bold bg-indigo-100 px-2 py-1 rounded text-xs">前 1 小時</span>
                     </div>
 
-                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-blue-400 transition">
-                        <i class="fa-regular fa-bell text-blue-500 mr-3"></i>
+                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-indigo-400 transition">
+                        <i class="fa-regular fa-bell text-indigo-500 mr-3"></i>
                         <span class="font-bold text-gray-700 w-24">額外提醒 1</span>
                         <span class="mr-2 text-gray-500 text-xs">前</span>
-                        <input type="number" id="rem1_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 outline-none">
-                        <select id="rem1_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                        <input type="number" id="rem1_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-indigo-500 outline-none">
+                        <select id="rem1_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
                             <option value="1">分鐘</option>
                             <option value="60">小時</option>
                             <option value="1440">天</option>
                         </select>
                     </div>
 
-                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-blue-400 transition">
-                        <i class="fa-regular fa-bell text-blue-500 mr-3"></i>
+                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-indigo-400 transition">
+                        <i class="fa-regular fa-bell text-indigo-500 mr-3"></i>
                         <span class="font-bold text-gray-700 w-24">額外提醒 2</span>
                         <span class="mr-2 text-gray-500 text-xs">前</span>
-                        <input type="number" id="rem2_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 outline-none">
-                        <select id="rem2_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none bg-white">
+                        <input type="number" id="rem2_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-indigo-500 outline-none">
+                        <select id="rem2_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
                             <option value="1">分鐘</option>
                             <option value="60">小時</option>
                             <option value="1440">天</option>
@@ -120,17 +119,17 @@
         </section>
 
         <!-- 產生程式碼按鈕 -->
-        <section class="bg-blue-50 p-6 rounded-lg shadow-sm border border-blue-200 text-center">
-            <h2 class="text-xl font-bold text-blue-800 mb-2">產生您的專屬程式碼</h2>
-            <button onclick="generateCode()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
+        <section class="bg-indigo-50 p-6 rounded-lg shadow-sm border border-indigo-200 text-center">
+            <h2 class="text-xl font-bold text-indigo-800 mb-2">產生您的專屬程式碼</h2>
+            <button onclick="generateCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
                 <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>一鍵產生代碼
             </button>
         </section>
 
         <!-- 結果顯示區 -->
-        <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-blue-500">
+        <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v5.3)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v5.9)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -142,7 +141,7 @@
         <!-- 步驟 4: GAS 部署 -->
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">4</div>
+                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">4</div>
                 <h2 class="text-xl font-bold text-gray-800">部署 Google Apps Script</h2>
             </div>
             <div class="pl-10 space-y-4 text-sm text-gray-600">
@@ -176,12 +175,12 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v5.3 (萬用格式增強版)
- * 功能：智慧模糊解析 LINE 訊息 -> Google Sheet -> LINE 通知
+ * 專案名稱：時光秘書 (Chrono-Secretary) v5.9 (智慧自動聚類版)
+ * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. 支援軍事時間 (1400-1700), 小數點日期 (2026.01.17)
- * 2. 忽略列表編號 (1. 1月...) 與前綴 (日期：)
- * 3. 自動整合講師、費用等資訊至備註
+ * 1. [v5.9] 採用「日期錨點」聚類演算法，不依賴固定行數或格式，自動判斷多行程
+ * 2. [v5.9] 自動吸附日期附近的標題與連結，解決標題在前/在後不固定的問題
+ * 3. [v5.9] 移除嚴格的列表符號檢查，提高對雜亂格式的相容性
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -194,7 +193,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v5.3 萬用格式版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v5.9 智慧版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -225,13 +224,10 @@ function doPost(e) {
   if (event.type === 'message') {
     let userMessage = "";
     
-    // Step 1: 立即回覆避免 Timeout
     if (event.message.type === 'image') {
       try {
         replyLine(replyToken, "🔍 收到圖片，正在進行 AI 辨識與整理... (請稍候)");
-      } catch (e) {
-        Logger.log("Reply failed: " + e.message);
-      }
+      } catch (e) { Logger.log("Reply failed: " + e.message); }
       
       try {
         userMessage = handleImageOCR(event.message.id);
@@ -245,14 +241,10 @@ function doPost(e) {
       }
     } else if (event.message.type === 'text') {
       userMessage = event.message.text;
-    } else {
-      return; 
-    }
+    } else { return; }
 
-    // Step 3: 解析與寫入
     if (userMessage) {
       try {
-        // [v5.3] 使用 v5.3 解析器
         const result = parseScheduleV5(userMessage);
         
         if (result.status === 'error') {
@@ -324,7 +316,6 @@ function processEventsBatch(userId, newEvents) {
     const row = existingData[i];
     let rowTime = row[4];
     if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); }
-    
     if (!isNaN(rowTime.getTime())) {
        const timeKey = Math.floor(rowTime.getTime() / 60000);
        existingSignatures.add(\`\${timeKey}_\${row[5]}\`);
@@ -364,7 +355,6 @@ function processEventsBatch(userId, newEvents) {
     const lastRow = sheet.getLastRow();
     sheet.getRange(lastRow + 1, 1, rowsToAdd.length, rowsToAdd[0].length).setValues(rowsToAdd);
     SpreadsheetApp.flush(); 
-    
     const fullRange = sheet.getDataRange();
     if (fullRange.getNumRows() > 1) {
        sheet.getRange(2, 1, fullRange.getNumRows() - 1, fullRange.getNumColumns()).sort({column: 5, ascending: true});
@@ -394,202 +384,165 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v5.3 核心] 全文結構化 + 強力日期時間解析
+// [v5.9 核心] 智慧聚類解析 (不依賴固定格式)
 function parseScheduleV5(text) {
-  // 1. 預處理：全形轉半形、移除干擾
+  // 1. 預處理
   text = text.replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
              .replace(/⋅/g, " ").replace(/[()（）]/g, " ")
-             .replace(/日期[:：]/g, "").replace(/時間[:：]/g, ""); // 移除前綴標籤
+             .replace(/[\\u0000-\\u0008\\u000B-\\u001F\\u007F]/g, "") 
+             .replace(/日期[:：]/g, "").replace(/時間[:：]/g, ""); 
              
-  // [v5.3] 正規化時間關鍵字
   text = text.replace(/上午/g, "AM ").replace(/下午/g, "PM ")
              .replace(/(AM|PM)[:：]?/gi, "$1 ");
 
-  // 提取 URL
-  const urlRegex = /(https?:\\/\\/[^\\s]+)/g;
-  const links = text.match(urlRegex) || [];
-  let linkIndex = 0;
-
-  // 切割行
   const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
   const currentYear = new Date().getFullYear();
+  
+  // 步驟 1: 找出所有包含日期的行 (錨點)
+  const dateIndices = [];
+  const datePattern = /(?:^|[^\\d:：])(?:(\\d{2,4})[./年-])?\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/;
+  
+  lines.forEach((line, index) => {
+     // 過濾掉明顯無關的行，例如只有數字或年份
+     const pureNumber = line.match(/^(\\d{3,4})$/);
+     if (pureNumber) {
+        const val = parseInt(pureNumber[1]);
+        if (!(val >= 2020 && val <= 2035) && !(val >= 100 && val <= 199)) return; 
+     }
+     
+     // 排除純連結行當作日期
+     if (line.match(/^https?:\\/\\//)) return;
+
+     const match = line.match(datePattern);
+     const looksLikeTime = line.match(/\\d{1,2}\\s*[-~:]\\s*\\d{1,2}/);
+     
+     // 只要有日期格式，就當作潛在錨點 (即使同列有時間也沒關係)
+     if (match) {
+        dateIndices.push({ index: index, match: match });
+     }
+  });
+
   const results = [];
 
-  // --- 階段一：掃描全結構 (找出所有日期錨點) ---
-  const eventsMap = []; 
-  
-  let currentGroup = null;
-  let orphans = []; 
-
-  for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    
-    // [v5.3] 忽略清單編號 (如 1. 1月...)
-    line = line.replace(/^\\d+\\.\\s*/, ""); 
-
-    if (line.match(/^https?:\\/\\//) || line.match(/^(行程表|July|講師)/i)) continue;
-
-    // 時間防呆 (僅略過)
-    const pureNumber = line.match(/^(\\d{3,4})$/);
-    if (pureNumber) {
-       const val = parseInt(pureNumber[1]);
-       const isYear = (val >= 2020 && val <= 2035) || (val >= 100 && val <= 199);
-       if (!isYear) { continue; } 
-    }
-
-    // [v5.3] 日期偵測 (支援 . / - 年月日)
-    const dateMatch = line.match(/(?:^|\\s)(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
-    const looksLikeTime = line.match(/\\d{1,2}\\s*[-~:]\\s*\\d{1,2}/);
-
-    if (dateMatch && !looksLikeTime) {
-      // 發現新日期錨點
-      let y = dateMatch[1] ? parseInt(dateMatch[1]) : currentYear;
-      if (y < 1000) y += 1911; 
-      const m = String(dateMatch[2]).padStart(2, '0');
-      const d = String(dateMatch[3]).padStart(2, '0');
-      const dateStr = \`\${y}-\${m}-\${d}\`;
-
-      currentGroup = {
-        date: dateStr,
-        lines: [],
-        timeInfo: null
-      };
+  // 步驟 2: 針對每個日期錨點，建立一個「關注區域」並解析
+  dateIndices.forEach((item, i) => {
+      const lineIndex = item.index;
+      const match = item.match;
       
-      if (orphans.length > 0) {
-         currentGroup.lines.push(...orphans);
-         orphans = [];
-      }
-
-      const remainingText = line.replace(dateMatch[0], "").trim();
-      if (remainingText) currentGroup.lines.push(remainingText);
-
-      eventsMap.push(currentGroup);
-
-    } else {
-      if (currentGroup) {
-        // [v5.3] 智慧前視
-        let nextLineIsDate = false;
-        if (i + 1 < lines.length) {
-           let nextLine = lines[i+1].replace(/^\\d+\\.\\s*/, "");
-           const nextDateMatch = nextLine.match(/(?:^|\\s)(\\d{2,4})?\\s*[-./年]\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
-           const nextLooksLikeTime = nextLine.match(/\\d{1,2}\\s*[-~:]\\s*\\d{1,2}/);
-           if (nextDateMatch && !nextLooksLikeTime) {
-              nextLineIsDate = true;
-           }
-        }
-
-        if (nextLineIsDate) {
-           orphans.push(line); 
-        } else {
-           currentGroup.lines.push(line); 
-        }
-      } else {
-        orphans.push(line);
-      }
-    }
-  }
-
-  // --- 階段二：解析每個群組 ---
-  eventsMap.forEach(group => {
-    let title = "";
-    let startH = 9, startM = 0, endH = 10, endM = 0;
-    let location = "";
-    let foundTime = false;
-
-    group.lines.forEach(line => {
-      // [v5.3] 萬用時間解析 (軍事時間、無冒號、括號)
-      // 1. 範圍 (1400-1700, 06:30-0730)
-      const rangeTime = line.match(/(\\d{1,2}:?\\d{2}|\\d{4})\\s*[-~]\\s*(\\d{1,2}:?\\d{2}|\\d{4})/);
-      // 2. 單一 (09:00, 1400, 9點)
-      const singleTime = line.match(/(\\d{1,2}:?\\d{2}|\\d{4})(?:\\s*點|$)/);
+      // 計算關注區域：從上一個日期結束 到 下一個日期開始
+      // 但為了捕捉標題，我們會往上看幾行 (如果那些行不是上一個事件的連結)
+      let startIndex = (i === 0) ? 0 : dateIndices[i-1].index + 1;
+      let endIndex = (i === dateIndices.length - 1) ? lines.length : dateIndices[i+1].index;
       
-      const allDayMatch = line.match(/(整天|全天)/);
-      const halfDayMatch = line.match(/(上午|下午)?\\s*半天/);
-
-      if (!foundTime) {
-        if (rangeTime) {
-           const parseRaw = (raw) => {
-             raw = raw.replace(":", "");
-             if (raw.length === 4) return { h: parseInt(raw.substring(0,2)), m: parseInt(raw.substring(2,4)) };
-             if (raw.length <= 2) return { h: parseInt(raw), m: 0 };
-             return { h: 9, m: 0 }; // fallback
-           };
-           
-           const s = parseRaw(rangeTime[1]);
-           const e = parseRaw(rangeTime[2]);
-           
-           startH = s.h; startM = s.m;
-           endH = e.h; endM = e.m;
-           
-           if (line.match(/PM/i) && startH < 12) { startH += 12; if(endH < 12) endH += 12; }
-           
-           foundTime = true;
-           line = line.replace(rangeTime[0], "").trim();
-        } else if (singleTime && !line.match(/[-~]/)) { 
-           // 避免誤判年份 (如 2026)
-           let val = parseInt(singleTime[1].replace(":", ""));
-           if (val < 2400 && val > 2030 || val < 2020) {
-             let h=0, m=0;
-             if (singleTime[1].includes(":") || singleTime[1].length === 4) {
-                let raw = singleTime[1].replace(":", "");
-                h = parseInt(raw.substring(0,2));
-                m = parseInt(raw.substring(2,4));
-             } else {
-                h = parseInt(singleTime[1]);
-             }
-             
-             if (line.match(/PM/i) && h < 12) h += 12;
-             
-             startH = h; startM = m;
-             endH = h + 1; endM = m;
-             foundTime = true;
-             location += "(未指定結束時間)"; 
-             line = line.replace(singleTime[0], "").trim();
-           }
-        } else if (allDayMatch) { 
-           startH = 9; endH = 18; foundTime = true; 
-           line = line.replace(allDayMatch[0], "").trim();
-        } else if (halfDayMatch) { 
-           if (halfDayMatch[0].includes('上')) { startH = 9; endH = 12; } else { startH = 13; endH = 17; }
-           foundTime = true;
-           line = line.replace(halfDayMatch[0], "").trim();
-        }
+      // 提取日期
+      let y;
+      if (match[1]) {
+         y = parseInt(match[1]);
+         if (y < 1000) y += 1911; 
+      } else { y = currentYear; }
+      const m = parseInt(match[2]);
+      const d = parseInt(match[3]);
+      
+      if (!match[1]) {
+         const today = new Date();
+         if (today.getMonth() + 1 > m + 2) { y++; }
       }
+      const mStr = String(m).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      const dateStr = \`\${y}-\${mStr}-\${dStr}\`;
 
-      // 2. 找地點/標題/其他資訊
-      if (line.length > 0 && !line.match(/^[日一二三四五六]$/)) {
-         if (line.includes("地點") || line.includes("室") || line.includes("教室")) {
-            location = (location + " " + line).trim();
-         } else if (line.match(/^(講師|費用|對象|講題)/)) {
-            // [v5.3] 資訊整合至備註 (利用 Location 欄位顯示)
-            location = (location + "\\n" + line).trim();
-         } else {
-            title = (title + " " + line).trim();
+      // 內容解析變數
+      let title = "";
+      let location = "";
+      let startH = 9, startM = 0, endH = 10, endM = 0;
+      let foundTime = false;
+
+      // 掃描區域內的每一行
+      for (let k = startIndex; k < endIndex; k++) {
+         let subLine = lines[k];
+         
+         // 清理列表符號，但不刪除文字
+         subLine = subLine.replace(/^\\s*([(*]?\\d+[.)*\\]]?|[*•-])\\s*/, "");
+         
+         // 忽略導言
+         if (subLine.match(/^(提醒|通知|公告|以下).+[:：~]$/)) continue;
+
+         // 1. 找連結 -> 地點
+         if (subLine.match(/https?:\\/\\//)) {
+            location = (location + " " + subLine).trim();
+            continue;
+         }
+
+         // 2. 找時間
+         // 支援 19:30-21:00 (含冒號) 與 1400-1700 (無冒號)
+         const complexTime = subLine.match(/(?:^|\\s|[:：\\-(])(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?\\s*[-~]\\s*(?:AM|PM\\s*)?(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?/i);
+         const singleTime = subLine.match(/(?:^|\\s|[:：\\-(])(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?(?:$|\\s|點)/i);
+         const allDayMatch = subLine.match(/(整天|全天)/);
+         const vaguePM = subLine.match(/(下午|PM)/i); // 模糊時間
+
+         if (!foundTime) {
+            if (complexTime) {
+               const parseRaw = (raw) => {
+                 raw = raw.replace(":", "");
+                 if (raw.length === 4) return { h: parseInt(raw.substring(0,2)), m: parseInt(raw.substring(2,4)) };
+                 if (raw.length <= 2) return { h: parseInt(raw), m: 0 };
+                 return { h: 9, m: 0 };
+               };
+               const s = parseRaw(complexTime[1]);
+               const e = parseRaw(complexTime[4]); 
+               startH = s.h; startM = s.m; endH = e.h; endM = e.m;
+               if (subLine.match(/PM/i) && startH < 12) { startH += 12; if(endH < 12) endH += 12; }
+               foundTime = true;
+               // 移除時間字串，剩下的可能是標題
+               subLine = subLine.replace(complexTime[0], "").trim();
+            } else if (singleTime && !subLine.match(/[-~]/)) {
+               // 這裡要小心，不要把年份 2026 當作時間
+               let val = parseInt(singleTime[1].replace(":", ""));
+               if (val < 2400 && (val > 2035 || val < 2020)) {
+                  let h=0, m=0;
+                  if (singleTime[1].includes(":") || singleTime[1].length === 4) {
+                     let raw = singleTime[1].replace(":", "");
+                     h = parseInt(raw.substring(0,2));
+                     m = parseInt(raw.substring(2,4));
+                  } else { h = parseInt(singleTime[1]); }
+                  if (subLine.match(/PM/i) && h < 12) h += 12;
+                  startH = h; startM = m; endH = h + 1; endM = m;
+                  foundTime = true;
+                  subLine = subLine.replace(singleTime[0], "").trim();
+               }
+            } else if (allDayMatch) {
+               startH = 9; endH = 18; foundTime = true;
+               subLine = subLine.replace(allDayMatch[0], "").trim();
+            }
+         }
+
+         // 3. 剩下的就是標題 (如果該行不是純日期行)
+         // 移除日期字串
+         subLine = subLine.replace(match[0], "").trim();
+         
+         if (subLine.length > 0 && !subLine.match(/^[日一二三四五六]$/)) {
+            if (subLine.includes("地點") || subLine.includes("室") || subLine.includes("教室")) {
+               if (!location.includes(subLine)) location = (location + " " + subLine).trim();
+            } else if (!subLine.match(/^(講師|費用|對象|講題)/)) {
+               title = (title + " " + subLine).trim();
+            }
          }
       }
-    });
 
-    if (!title) title = "未命名行程";
+      if (!title) title = "未命名行程";
 
-    const startObj = new Date(\`\${group.date}T\${String(startH).padStart(2,'0')}:\${String(startM).padStart(2,'0')}:00\`);
-    const endObj = new Date(\`\${group.date}T\${String(endH).padStart(2,'0')}:\${String(endM).padStart(2,'0')}:00\`);
-    
-    let assignedLink = "";
-    if (links.length > 0) {
-        if (links.length === 1) assignedLink = links[0];
-        else if (linkIndex < links.length) assignedLink = links[linkIndex++];
-        else assignedLink = links[links.length - 1]; 
-    }
+      const startObj = new Date(\`\${dateStr}T\${String(startH).padStart(2,'0')}:\${String(startM).padStart(2,'0')}:00\`);
+      const endObj = new Date(\`\${dateStr}T\${String(endH).padStart(2,'0')}:\${String(endM).padStart(2,'0')}:00\`);
 
-    results.push({
-      date: group.date,
-      timeStart: \`\${String(startH).padStart(2,'0')}:\${String(startM).padStart(2,'0')}\`,
-      timeEnd: \`\${String(endH).padStart(2,'0')}:\${String(endM).padStart(2,'0')}\`,
-      startObj: startObj,
-      endObj: endObj,
-      title: title,
-      location: location || assignedLink
-    });
+      results.push({
+        date: dateStr,
+        timeStart: \`\${String(startH).padStart(2,'0')}:\${String(startM).padStart(2,'0')}\`,
+        timeEnd: \`\${String(endH).padStart(2,'0')}:\${String(endM).padStart(2,'0')}\`,
+        startObj: startObj,
+        endObj: endObj,
+        title: title,
+        location: location
+      });
   });
 
   return { status: 'success', data: results };

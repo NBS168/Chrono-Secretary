@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-indigo-100 text-sm mt-1">v8.1 區塊掃描版 (多行地點修復)</p>
+                <p class="text-indigo-100 text-sm mt-1">v8.2 訊息防爆版 (字數限制修復)</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,14 +26,13 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v8.1 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v8.2 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                解決了地點寫在日期下一行導致無法抓取的問題。
+                修復了因訊息內容過長（超過 5000 字）導致 LINE API 回傳 Error 400 的問題。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>📍 <b>多行地點抓取：</b>當日期下方跟著地址（如：台北市... 樓... 教室...）時，會自動識別並併入地點欄位。</li>
-                <li>🛡️ <b>區塊掃描技術：</b>智慧判斷行程區塊的結束點，不會把下一個行程的日期誤判為內容。</li>
-                <li>✅ <b>完整繼承：</b>包含 v8.0 的刪除指令、重複防呆與查詢功能。</li>
+                <li>📏 <b>自動截斷機制：</b>當回傳內容超過 4000 字時，自動截斷並提示，防止程式崩潰。</li>
+                <li>🛡️ <b>全功能保留：</b>包含 v8.1 的區塊掃描、刪除指令、重複防呆與查詢功能。</li>
             </ul>
         </section>
 
@@ -129,7 +128,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v8.1)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v8.2)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -175,12 +174,12 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v8.1 (區塊掃描版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v8.2 (訊息防爆版)
  * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. [v8.1] 區塊掃描：解決日期與地點分行寫的問題，自動將下方的地址/教室併入行程
- * 2. [v8.0] 刪除與防呆
- * 3. [v7.0] 查詢指令
+ * 1. [v8.2] 訊息長度防護：發送 LINE 訊息前檢查長度，超過 4000 字自動截斷，避免 400 Error
+ * 2. [v8.1] 區塊掃描：解決日期與地點分行寫的問題
+ * 3. [v8.0] 刪除與防呆
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -193,7 +192,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v8.1 區塊版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v8.2 防爆版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -311,12 +310,12 @@ function doPost(e) {
   }
 }
 
-// [v8.0] 處理使用者指令 (查詢/刪除/Help)
+// [v8.0] 處理使用者指令
 function handleUserCommand(text, replyToken, userId) {
   const lowerText = text.toLowerCase().trim();
 
   if (lowerText === 'help' || lowerText === '功能' || lowerText === '指令' || lowerText === '說明' || lowerText === '怎麼用' || lowerText === '教學') {
-    const helpMsg = "🤖 時光秘書使用說明 v8.0：\\n\\n" +
+    const helpMsg = "🤖 時光秘書使用說明 v8.2：\\n\\n" +
                     "1️⃣ 【新增行程】\\n直接貼上文字或圖片。\\n範例：「1/20 14:00 開會」\\n(若行程已存在會自動提示)\\n\\n" +
                     "2️⃣ 【查詢行程】\\n" +
                     "• 查今天/明天：「今天」、「明天」\\n" +
@@ -817,13 +816,21 @@ function performDailyMaintenance(ss, sheet) {
   }
 }
 
+// [v8.2] 訊息長度防護 (Truncate message)
 function replyLine(replyToken, text) {
+  if (text.length > 4000) {
+    text = text.substring(0, 4000) + "...(內容過長已截斷)";
+  }
   UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
     'headers': { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
     'method': 'post', 'payload': JSON.stringify({ replyToken: replyToken, messages: [{ type: 'text', text: text }] })
   });
 }
+
 function pushLineMessage(userId, text) {
+  if (text.length > 4000) {
+    text = text.substring(0, 4000) + "...(內容過長已截斷)";
+  }
   UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
     'headers': { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
     'method': 'post', 'payload': JSON.stringify({ to: userId, messages: [{ type: 'text', text: text }] })

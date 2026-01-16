@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-indigo-100 text-sm mt-1">v6.0 全域繼承與多日期版</p>
+                <p class="text-indigo-100 text-sm mt-1">v6.1 智慧斷詞修正版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,14 +26,14 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v6.0 版本更新 (解決您的案例)</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v6.1 版本更新 (精準修復)</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                針對「標題時間在最上方，下方只有一連串日期」的格式進行了邏輯重構。
+                解決了「時間與中文黏在一起」導致無法辨識時間的問題。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>👑 <b>全域繼承 (Global Context)：</b>自動將上方的「主管會議」與「10:30-12:30」套用到下方所有日期。</li>
-                <li>📅 <b>單行多日期：</b>完美解析 <code>3/17 4/21 5/19...</code> 這種單行多日期的清單，不再漏掉。</li>
-                <li>🔧 <b>特殊時間修正：</b>自動修復 <code>1030:12:30</code> 這類特殊時間寫法。</li>
+                <li>✂️ <b>智慧斷詞 (Smart Spacing)：</b>自動在中文與數字之間加入間隔，讓 <code>週二1030</code> 也能被正確讀取為 <code>10:30</code>。</li>
+                <li>🎯 <b>全域時間鎖定：</b>確保第一行的時間設定能正確套用到下方所有行程。</li>
+                <li>✅ <b>完整保留：</b>包含 v6.0 的單行多日期解析與全域繼承功能。</li>
             </ul>
         </section>
 
@@ -129,7 +129,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v6.0)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v6.1)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -175,12 +175,12 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v6.0 (全域繼承與多日期版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v6.1 (智慧斷詞修正版)
  * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. [v6.0] 全域繼承：自動將最上方的標題與時間，套用到下方所有日期 (解決 "主管會議" 標題在最上面的問題)
- * 2. [v6.0] 單行多日期：強力解析 "3/17 4/21 5/19" 這種密集日期清單
- * 3. [v6.0] 時間修正：支援 "1030:12:30" 格式自動修復
+ * 1. [v6.1] 智慧斷詞：自動在中文與數字間加入空白，解決 "週二1030" 黏在一起導致時間誤判的問題
+ * 2. [v6.0] 全域繼承：標題與時間自動套用到下方日期
+ * 3. [v6.0] 時間修正：支援 "1030:12:30" 格式
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -193,7 +193,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v6.0 全域版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v6.1 智慧斷詞版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -384,9 +384,14 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v6.0 核心] 全域繼承與多日期解析
+// [v6.1 核心] 全域繼承 + 智慧斷詞
 function parseScheduleV6(text) {
-  // 1. 預處理: 修正特殊時間 1030:12:30 -> 1030-12:30, 清理符號
+  // 1. 預處理: 
+  // [v6.1] 智慧斷詞：中文與數字之間加入空白，讓 "週二1030" 變成 "週二 1030"
+  text = text.replace(/([\\u4e00-\\u9fa5])(\\d)/g, "$1 $2")
+             .replace(/(\\d)([\\u4e00-\\u9fa5])/g, "$1 $2");
+
+  // 修正特殊時間 1030:12:30 -> 1030-12:30, 清理符號
   text = text.replace(/(\\d{4})[:](?=\\d{2})/g, "$1-") // 修正 1030:12:30
              .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
              .replace(/⋅/g, " ").replace(/[()（）]/g, " ")
@@ -406,9 +411,18 @@ function parseScheduleV6(text) {
 
   let firstDateLineIndex = -1;
   for (let i = 0; i < lines.length; i++) {
-     if (lines[i].match(datePattern)) {
-        firstDateLineIndex = i;
-        break;
+     // 重置 lastIndex
+     datePattern.lastIndex = 0;
+     if (datePattern.test(lines[i])) {
+        // 二次確認不是純數字年份
+        const tempMatch = lines[i].match(/(?:^|[^\\d:：])(?:(\\d{2,4})[./年-])?\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/);
+        if (tempMatch) {
+            const pureNumber = tempMatch[0].trim().match(/^(\\d{3,4})$/);
+            if (!pureNumber) {
+                firstDateLineIndex = i;
+                break;
+            }
+        }
      }
   }
 
@@ -433,8 +447,6 @@ function parseScheduleV6(text) {
   // 步驟 2: 逐行掃描日期並建立行程
   const results = [];
   
-  // 從第一行開始掃 (因為即使是全域標題行，也可能藏有日期，雖然我們已經處理過全域，但還是全部重掃日期比較保險)
-  // 修正: 只需要掃描有日期的行
   lines.forEach(line => {
      let dateMatches = [];
      let match;
@@ -466,11 +478,8 @@ function parseScheduleV6(text) {
         
         // 決定最終標題與時間
         let finalTitle = localTitle ? (defaultTitle + " (" + localTitle + ")") : defaultTitle;
-        // 如果 localTitle 太長且包含 defaultTitle 的一部分，可能不需要括號，但簡單起見先這樣
-        if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle; // 如果全域沒標題，就用區域
+        if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle;
 
-        // 如果 localTitle 只是 "過年改"，加上全域標題會變成 "主管會議 (過年改)" -> 很好
-        
         let sH = localTime.found ? localTime.startH : defaultTime.startH;
         let sM = localTime.found ? localTime.startM : defaultTime.startM;
         let eH = localTime.found ? localTime.endH : defaultTime.endH;
@@ -501,7 +510,7 @@ function parseScheduleV6(text) {
              startObj: startObj,
              endObj: endObj,
              title: finalTitle,
-             location: "" // 連結暫不複雜處理，通常全域連結在最下面或最上面
+             location: "" 
            });
         });
      }

@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-indigo-100 text-sm mt-1">v8.3 月份情境感知版</p>
+                <p class="text-indigo-100 text-sm mt-1">v8.4 晚間時段強化版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,14 +26,14 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v8.3 版本更新 (表格智慧判讀)</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v8.4 版本更新</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                加入「月份情境記憶」，能讀懂表格標題與簡寫日期的關係。
+                修正了「晚上/今晚」時間誤判，以及日期變為 01/01 的問題。
             </p>
             <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🧠 <b>月份繼承 (Month Context)：</b>若上方出現「3月份」，下方只需寫「5日」或「20號」，系統會自動理解為 3/5 與 3/20。</li>
-                <li>📊 <b>表格結構強化：</b>針對 <code>日期 內容 時間</code> 或 <code>日期 時間 內容</code> 的排列組合進行模糊匹配。</li>
-                <li>📏 <b>防爆與防呆：</b>保留 v8.2 的訊息長度截斷與 v8.0 的重複行程檢查功能。</li>
+                <li>🌙 <b>晚間關鍵字支援：</b>自動將 <code>今晚</code>、<code>晚上</code>、<code>晚間</code> 識別為 PM，下午/晚上的時間不再搞錯。</li>
+                <li>🔧 <b>日期構造修復：</b>改用更穩定的演算法建立日期物件，解決 <code>01/01</code> 錯誤。</li>
+                <li>🧹 <b>括號清理：</b>優化了 <code>(五)</code>、<code>[週五]</code> 等星期幾符號的過濾邏輯。</li>
             </ul>
         </section>
 
@@ -129,7 +129,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v8.3)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v8.4)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -175,13 +175,12 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v8.3 (月份情境感知版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v8.4 (晚間時段與日期強化版)
  * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
  * 更新：
- * 1. [v8.3] 月份情境感知：掃描到 "3月" 標題後，下方 "5日" 自動解析為 "3/5"
- * 2. [v8.3] 智慧年份跨越：若 12 月讀到 1 月行程，自動切換至明年
- * 3. [v8.2] 訊息防爆 (4000字截斷)
- * 4. [v8.1] 區塊掃描 (地點多行)
+ * 1. [v8.4] 晚間支援：新增 "今晚"、"晚上"、"晚間" -> PM 轉換，解決 7:30 變 07:30 的問題
+ * 2. [v8.4] 日期構造：使用 new Date(y, m-1, d) 解決 01/01 預設值 bug
+ * 3. [v8.3] 月份情境 & [v8.1] 區塊掃描
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -194,7 +193,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v8.3 智慧版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v8.4 強化版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -251,7 +250,7 @@ function doPost(e) {
 
     if (userMessage) {
       try {
-        const result = parseScheduleV83(userMessage); // v8.3
+        const result = parseScheduleV84(userMessage); // v8.4
         
         if (result.status === 'error') {
            if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
@@ -312,13 +311,13 @@ function doPost(e) {
   }
 }
 
-// [v8.0] 指令處理
+// 指令處理
 function handleUserCommand(text, replyToken, userId) {
   const lowerText = text.toLowerCase().trim();
 
   if (lowerText === 'help' || lowerText === '功能' || lowerText === '指令' || lowerText === '說明' || lowerText === '怎麼用' || lowerText === '教學') {
-    const helpMsg = "🤖 時光秘書使用說明 v8.3：\\n\\n" +
-                    "1️⃣ 【新增行程】\\n直接貼上文字或圖片(支援表格截圖)。\\n範例：「1/20 14:00 開會」\\n\\n" +
+    const helpMsg = "🤖 時光秘書使用說明 v8.4：\\n\\n" +
+                    "1️⃣ 【新增行程】\\n直接貼上文字或圖片。\\n範例：「1/20 晚上7:30 開會」\\n\\n" +
                     "2️⃣ 【查詢行程】\\n" +
                     "• 查特定日期：「1/20」\\n" +
                     "• 查整月份：「1月」\\n\\n" +
@@ -568,14 +567,17 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v8.3] 月份情境感知 + 區塊掃描 + 智慧斷詞
-function parseScheduleV83(text) {
+// [v8.4] 晚間時段 + 日期構造強化 + 區塊掃描 + 智慧斷詞
+function parseScheduleV84(text) {
+  // [v8.4] 晚間關鍵字 -> PM
+  text = text.replace(/(今晚|晚上|晚間)/g, "PM ");
+
   text = text.replace(/([\\u4e00-\\u9fa5])(\\d)/g, "$1 $2")
              .replace(/(\\d)([\\u4e00-\\u9fa5])/g, "$1 $2");
 
   text = text.replace(/(\\d{4})[:](?=\\d{2})/g, "$1-")
              .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-             .replace(/⋅/g, " ").replace(/[()（）]/g, " ")
+             .replace(/⋅/g, " ").replace(/[()（）【】]/g, " ") // [v8.4] 括號處理
              .replace(/[\\u0000-\\u0008\\u000B-\\u001F\\u007F]/g, "") 
              .replace(/日期[:：]/g, "").replace(/時間[:：]/g, ""); 
              
@@ -584,46 +586,39 @@ function parseScheduleV83(text) {
 
   const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
   const currentYear = new Date().getFullYear();
-  const currentRealMonth = new Date().getMonth() + 1; // 1-12
+  const currentRealMonth = new Date().getMonth() + 1; 
 
-  // Regex Patterns
-  const datePattern = /(?:^|[^\\d:：])(?:(\\d{2,4})[./年-])?\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/g; // MM/DD
-  const monthHeaderPattern = /^(\\d{1,2})\\s*[月]/; // 3月, 3 月
-  const dayOnlyPattern = /^(\\d{1,2})\\s*[日號](?!\\d)/; // 5日, 20號
+  const datePattern = /(?:^|[^\\d:：])(?:(\\d{2,4})[./年-])?\\s*(\\d{1,2})\\s*[-./月]\\s*(\\d{1,2})日?/g; 
+  const monthHeaderPattern = /^(\\d{1,2})\\s*[月]/; 
+  const dayOnlyPattern = /^(\\d{1,2})\\s*[日號](?!\\d)/; 
 
   let defaultTitle = "";
   let defaultTime = { startH: 9, startM: 0, endH: 10, endM: 0, valid: false };
-  let contextMonth = null; // 上下文月份記憶
+  let contextMonth = null; 
 
   const results = [];
   
-  // 逐行掃描
   for (let i = 0; i < lines.length; i++) {
      let line = lines[i];
      
-     // 1. 檢查是否為月份標題 (更新 contextMonth)
      const monthHeader = line.match(monthHeaderPattern);
      if (monthHeader) {
         contextMonth = parseInt(monthHeader[1]);
-        // 如果該行只有月份，沒有內容，就跳過
         if (line.length < 10) continue; 
      }
 
-     // 2. 檢查日期 (MM/DD 或 DD日)
      let dateMatches = [];
      let match;
      
-     // A. 標準日期 MM/DD
      datePattern.lastIndex = 0;
      while ((match = datePattern.exec(line)) !== null) {
         const pureNumber = match[0].trim().match(/^(\\d{3,4})$/);
         if (!pureNumber && !((parseInt(match[1]) || 2026) < 2020)) {
            dateMatches.push({ m: parseInt(match[2]), d: parseInt(match[3]), src: match[0] });
-           contextMonth = parseInt(match[2]); // 更新上下文
+           contextMonth = parseInt(match[2]); 
         }
      }
 
-     // B. 簡寫日期 DD日 (需有 contextMonth)
      if (dateMatches.length === 0 && contextMonth) {
         const dayMatch = line.match(dayOnlyPattern);
         if (dayMatch) {
@@ -631,13 +626,10 @@ function parseScheduleV83(text) {
         }
      }
 
-     // 如果這行沒有任何日期，就檢查是否為全域標題/時間 (如果是第一行附近的)
      if (dateMatches.length === 0) {
-        // 全域資訊提取邏輯 (僅在尚未發現任何行程前)
         if (results.length === 0) {
             const t = extractTimeFromLine(line);
             if (t.found) { defaultTime = t; defaultTime.valid = true; line = line.replace(t.raw, ""); }
-            // 排除無關文字
             if (!line.match(/^(提醒|通知|公告|以下).+[:：~]$/) && !line.match(/https?:\\/\\//) && !line.match(/^(其他時間)/)) {
                defaultTitle += line + " ";
             }
@@ -645,13 +637,11 @@ function parseScheduleV83(text) {
         continue;
      }
 
-     // 3. 解析該行內容
      let localTime = extractTimeFromLine(line);
      let contentText = line;
      dateMatches.forEach(dm => { contentText = contentText.replace(dm.src, " "); });
      if (localTime.found) { contentText = contentText.replace(localTime.raw, " "); }
      
-     // 移除月份標題文字以免干擾
      if (monthHeader) contentText = contentText.replace(monthHeader[0], " ");
 
      let localTitle = contentText.replace(/^\\s*([(*]?\\d+[.)*\\]]?|[*•-])\\s*/, "")
@@ -660,12 +650,10 @@ function parseScheduleV83(text) {
 
      let localLocation = "";
 
-     // 4. 區塊掃描 (往下找地點/描述)
      let j = i + 1;
      while (j < lines.length) {
         let nextLine = lines[j];
         
-        // 檢查下一行是否為日期 (若是則中斷)
         let nextIsDate = false;
         if (datePattern.test(nextLine) || (contextMonth && dayOnlyPattern.test(nextLine)) || monthHeaderPattern.test(nextLine)) {
             nextIsDate = true;
@@ -673,7 +661,6 @@ function parseScheduleV83(text) {
         
         if (nextIsDate) break;
 
-        // 收集地點/描述
         if (nextLine.match(/(地點|地址|位置|教室|會議室|樓|號|路|街|區|市|縣|http|大樓)/)) {
              localLocation += " " + nextLine;
         } else if (nextLine.match(/^(講師|費用|對象|講題)/)) {
@@ -684,7 +671,6 @@ function parseScheduleV83(text) {
         j++;
      }
 
-     // 標題決定
      defaultTitle = defaultTitle.trim();
      let finalTitle = localTitle ? (defaultTitle ? defaultTitle + " (" + localTitle + ")" : localTitle) : defaultTitle || "未命名行程";
      if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle;
@@ -696,18 +682,17 @@ function parseScheduleV83(text) {
      let eH = localTime.found ? localTime.endH : defaultTime.endH;
      let eM = localTime.found ? localTime.endM : defaultTime.endM;
 
-     // 建立行程
      dateMatches.forEach(dm => {
         let y = currentYear;
-        // 跨年判斷：如果現在是年底 (11,12月)，但讀到年初 (1,2月) -> 明年
         if (currentRealMonth >= 11 && dm.m <= 2) y++;
+        
+        // [v8.4] 修正日期構造：使用 new Date(y, m-1, d, h, m)
+        const startObj = new Date(y, dm.m - 1, dm.d, sH, sM, 0);
+        const endObj = new Date(y, dm.m - 1, dm.d, eH, eM, 0);
         
         const mStr = String(dm.m).padStart(2, '0');
         const dStr = String(dm.d).padStart(2, '0');
         const dateStr = \`\${y}-\${mStr}-\${dStr}\`;
-
-        const startObj = new Date(\`\${dateStr}T\${String(sH).padStart(2,'0')}:\${String(sM).padStart(2,'0')}:00\`);
-        const endObj = new Date(\`\${dateStr}T\${String(eH).padStart(2,'0')}:\${String(eM).padStart(2,'0')}:00\`);
 
         results.push({
           date: dateStr,
@@ -720,7 +705,7 @@ function parseScheduleV83(text) {
         });
      });
 
-     i = j - 1; // 跳過已處理的行
+     i = j - 1; 
   }
 
   return { status: 'success', data: results };
@@ -814,7 +799,6 @@ function performDailyMaintenance(ss, sheet) {
   }
 }
 
-// [v8.2] 訊息長度防護
 function replyLine(replyToken, text) {
   if (text.length > 4000) {
     text = text.substring(0, 4000) + "...(內容過長已截斷)";

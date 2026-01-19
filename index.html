@@ -17,7 +17,7 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-indigo-100 text-sm mt-1">v9.2 精準校正版</p>
+                <p class="text-indigo-100 text-sm mt-1">v10.0 終極完整版</p>
             </div>
             <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
         </div>
@@ -26,15 +26,24 @@
     <main class="max-w-4xl mx-auto p-6 space-y-8">
 
         <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👋 v9.2 版本更新</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👑 v10.0 終極完整版</h2>
             <p class="text-gray-600 leading-relaxed mb-4">
-                修復了日期與年份因斷詞而被截斷的問題，並強化標題清理。
+                這是集大成的版本，整合了過去所有修正需求，確保判斷邏輯最為嚴謹全面。
             </p>
-            <ul class="list-disc list-inside space-y-2 text-gray-600 ml-2">
-                <li>🔧 <b>斷詞邏輯修正：</b>不再切斷 <code>115年</code>、<code>3月</code>，確保日期能被完整識別。</li>
-                <li>🧹 <b>標題強力淨化：</b>自動移除日期提取後遺留的 <code>日</code>、<code>(六)</code>、<code>週五</code> 等殘字。</li>
-                <li>🛡️ <b>全功能整合：</b>包含 聊天記錄淨化、區塊掃描、查詢、刪除、防呆等所有功能。</li>
-            </ul>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                <ul class="list-disc list-inside space-y-2">
+                    <li>✅ <b>全格式支援：</b>表格、列表、長文、聊天記錄複製。</li>
+                    <li>✅ <b>精準時間：</b>支援晚間(PM)、跨行時間、緊湊時間格式。</li>
+                    <li>✅ <b>民國年修復：</b>完美支援 115年 等民國紀年，防止斷詞錯誤。</li>
+                    <li>✅ <b>智慧內容：</b>自動繼承標題、自動抓取多行地點。</li>
+                </ul>
+                <ul class="list-disc list-inside space-y-2">
+                    <li>✅ <b>指令系統：</b>查詢 (1/20)、刪除 (刪除 1/20)、HELP。</li>
+                    <li>✅ <b>重複防呆：</b>完全相同的行程自動略過。</li>
+                    <li>✅ <b>訊息防爆：</b>自動截斷過長訊息，避免 Error 400。</li>
+                    <li>✅ <b>標題淨化：</b>自動移除 (六)、日 等殘字。</li>
+                </ul>
+            </div>
         </section>
 
         <!-- 步驟 1: LINE 設定 -->
@@ -129,7 +138,7 @@
         <!-- 結果顯示區 -->
         <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v9.2)</h3>
+                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v10.0)</h3>
                 <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
                     <i class="fa-regular fa-copy mr-2"></i>複製代碼
                 </button>
@@ -175,13 +184,14 @@
 
     <script>
         const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v9.2 (精準校正版)
+ * 專案名稱：時光秘書 (Chrono-Secretary) v10.0 (終極完整版)
  * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
- * 更新：
- * 1. [v9.2] 斷詞邏輯優化：排除 "年月日號" 的斷詞，解決 115年 被切斷導致無法識別的問題
- * 2. [v9.2] 標題殘字清理：移除日期提取後遺留的 "日", "(六)", "[週五]" 等
- * 3. [v9.1] 聊天記錄淨化
- * 4. [v9.0] 深度時間搜索
+ * 版本歷史：整合了 v1.0 至 v9.2 所有修正
+ * 1. 格式支援：OCR圖片、表格、文字、列表
+ * 2. 時間判讀：晚間修正、跨行搜索、格式自動修復
+ * 3. 日期判讀：民國年(115年)修復、月份情境感知
+ * 4. 內容處理：全域標題繼承、多行地點合併、聊天記錄淨化
+ * 5. 系統功能：查詢、刪除、HELP、重複防呆、訊息防爆
  */
 
 // ================= 設定區 (由網頁產生器自動填入) =================
@@ -194,7 +204,7 @@ const HISTORY_SHEET_NAME = '歷史封存';
 // [重要] 提醒時間設定
 const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
 
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v9.2 校正版)！"); }
+function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v10.0 終極版)！"); }
 
 function initialSetup() {
   const user = Session.getActiveUser().getEmail();
@@ -243,6 +253,7 @@ function doPost(e) {
     } else if (event.message.type === 'text') {
       userMessage = event.message.text;
       
+      // 指令檢查 (HELP/查詢/刪除)
       if (handleUserCommand(userMessage, replyToken, userId)) {
         return; 
       }
@@ -251,8 +262,10 @@ function doPost(e) {
 
     if (userMessage) {
       try {
+        // 1. 聊天記錄淨化
         const cleanMessage = cleanChatLog(userMessage);
-        const result = parseScheduleV92(cleanMessage); // v9.2
+        // 2. 終極解析
+        const result = parseScheduleUltimate(cleanMessage); 
         
         if (result.status === 'error') {
            if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
@@ -313,6 +326,9 @@ function doPost(e) {
   }
 }
 
+// ---------------- 核心功能區 ----------------
+
+// 聊天記錄淨化：移除行首的 11:35 或 上午 11:35 格式
 function cleanChatLog(text) {
   const lines = text.split('\\n');
   const cleanedLines = lines.map(line => {
@@ -321,12 +337,14 @@ function cleanChatLog(text) {
   return cleanedLines.join('\\n');
 }
 
+// 使用者指令處理
 function handleUserCommand(text, replyToken, userId) {
   const lowerText = text.toLowerCase().trim();
 
+  // HELP
   if (lowerText === 'help' || lowerText === '功能' || lowerText === '指令' || lowerText === '說明' || lowerText === '怎麼用' || lowerText === '教學') {
-    const helpMsg = "🤖 時光秘書使用說明 v9.2：\\n\\n" +
-                    "1️⃣ 【新增行程】\\n直接貼上文字或圖片 (支援複製 LINE 記錄)。\\n範例：「1/20 晚上7:30 開會」\\n\\n" +
+    const helpMsg = "🤖 時光秘書使用說明 v10.0：\\n\\n" +
+                    "1️⃣ 【新增行程】\\n直接貼上文字或圖片 (支援表格、聊天記錄)。\\n範例：「1/20 晚上7:30 開會」\\n\\n" +
                     "2️⃣ 【查詢行程】\\n" +
                     "• 查特定日期：「1/20」\\n" +
                     "• 查整月份：「1月」\\n\\n" +
@@ -336,12 +354,14 @@ function handleUserCommand(text, replyToken, userId) {
     return true;
   }
 
+  // 刪除
   if (lowerText.startsWith("刪除") || lowerText.startsWith("取消")) {
      const delResult = deleteScheduleByCommand(text);
      replyLine(replyToken, delResult);
      return true;
   }
 
+  // 查詢判斷
   const isExplicitQuery = text.match(/(查詢|行程|安排|有什麼|幾號)/);
   const isShortDate = text.length < 10 && text.match(/(\\d{1,2}[/-]\\d{1,2}|\\d{1,2}月)/);
   const isKeyword = text.match(/^(今天|明天|後天)$/);
@@ -495,7 +515,7 @@ function processEventsBatch(userId, newEvents) {
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "建立時間"]);
+    sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "封存時間"]);
     sheet.setFrozenRows(1);
   }
 
@@ -576,14 +596,16 @@ function handleImageOCR(messageId) {
   return text;
 }
 
-// [v9.2] 斷詞校正 + 標題清理 + 區塊掃描 + 全域繼承
-function parseScheduleV92(text) {
+// ---------------- 解析核心 V10.0 ----------------
+function parseScheduleUltimate(text) {
+  // 1. 晚間關鍵字
   text = text.replace(/(今晚|晚上|晚間)/g, "PM ");
   
-  // [v9.2] 斷詞校正：排除 年/月/日/號
+  // 2. 智慧斷詞 (避開年月日號)
   text = text.replace(/([^\d年月日號\s])(\d)/g, "$1 $2")
              .replace(/(\d)([^\d年月日號\s:：-])/g, "$1 $2");
 
+  // 3. 符號清理
   text = text.replace(/(\\d{4})[:](?=\\d{2})/g, "$1-")
              .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
              .replace(/⋅/g, " ").replace(/[()（）【】\\[\\]]/g, " ") 
@@ -610,6 +632,7 @@ function parseScheduleV92(text) {
   for (let i = 0; i < lines.length; i++) {
      let line = lines[i];
      
+     // 月份標題偵測 (更新上下文)
      const monthHeader = line.match(monthHeaderPattern);
      if (monthHeader) {
         contextMonth = parseInt(monthHeader[1]);
@@ -619,6 +642,7 @@ function parseScheduleV92(text) {
      let dateMatches = [];
      let match;
      
+     // 抓取標準日期 (含民國年)
      datePattern.lastIndex = 0;
      while ((match = datePattern.exec(line)) !== null) {
         const pureNumber = match[0].trim().match(/^(\\d{3,4})$/);
@@ -626,12 +650,14 @@ function parseScheduleV92(text) {
         let isROC = false;
         if (yCandidate < 1000) { yCandidate += 1911; isROC = true; }
         
+        // 嚴格年限: 民國或 2020-2035
         if (!pureNumber && (isROC || !yCandidate || (yCandidate >= 2020 && yCandidate <= 2035))) {
            dateMatches.push({ m: parseInt(match[2]), d: parseInt(match[3]), src: match[0], y: yCandidate });
            contextMonth = parseInt(match[2]); 
         }
      }
 
+     // 抓取簡寫日期 (需有 ContextMonth)
      if (dateMatches.length === 0 && contextMonth) {
         const dayMatch = line.match(dayOnlyPattern);
         if (dayMatch) {
@@ -639,6 +665,7 @@ function parseScheduleV92(text) {
         }
      }
 
+     // 若這行沒日期 -> 嘗試提取全域資訊
      if (dateMatches.length === 0) {
         if (results.length === 0) {
             const t = extractTimeFromLine(line);
@@ -650,14 +677,14 @@ function parseScheduleV92(text) {
         continue;
      }
 
+     // 解析當行內容
      let localTime = extractTimeFromLine(line);
      let contentText = line;
      dateMatches.forEach(dm => { contentText = contentText.replace(dm.src, " "); });
      if (localTime.found) { contentText = contentText.replace(localTime.raw, " "); }
-     
      if (monthHeader) contentText = contentText.replace(monthHeader[0], " ");
 
-     // [v9.2] 標題強力清理
+     // 標題強力淨化
      let localTitle = contentText.replace(/^\\s*([(*]?\\d+[.)*\\]]?|[*•-])\\s*/, "")
                                  .replace(/https?:\\/\\/[^\\s]+/g, "")
                                  .replace(/[週星期][一二三四五六日]/g, "") 
@@ -667,19 +694,22 @@ function parseScheduleV92(text) {
 
      let localLocation = "";
 
+     // 區塊掃描 (深度時間搜索 + 地點)
      let j = i + 1;
      while (j < lines.length) {
         let nextLine = lines[j];
         
+        // 遇到下一個日期則停止
         let nextIsDate = false;
         if (datePattern.test(nextLine) || (contextMonth && dayOnlyPattern.test(nextLine)) || monthHeaderPattern.test(nextLine)) {
             nextIsDate = true;
         }
-        
         if (nextIsDate) break;
 
+        // 深度時間搜索：如果這行是時間，且比目前的更像 (或是區段)，就用它
         let potentialTime = extractTimeFromLine(nextLine);
         if (potentialTime.found) {
+             // 邏輯: 若原無時間 OR 原為單點且新為區段 -> 替換
              if (!localTime.found || (localTime.startH === localTime.endH - 1 && potentialTime.startH !== potentialTime.endH - 1)) {
                  localTime = potentialTime;
              }
@@ -699,6 +729,7 @@ function parseScheduleV92(text) {
         j++;
      }
 
+     // 整合資訊
      defaultTitle = defaultTitle.trim();
      let finalTitle = localTitle ? (defaultTitle ? defaultTitle + " (" + localTitle + ")" : localTitle) : defaultTitle || "未命名行程";
      if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle;
@@ -710,10 +741,13 @@ function parseScheduleV92(text) {
      let eH = localTime.found ? localTime.endH : defaultTime.endH;
      let eM = localTime.found ? localTime.endM : defaultTime.endM;
 
+     // 產生事件物件
      dateMatches.forEach(dm => {
         let y = dm.y || currentYear;
+        // 自動跨年：若沒指定年份 & 現在年底 & 目標年初
         if (!dm.y && currentRealMonth >= 11 && dm.m <= 2) y++;
         
+        // 日期物件
         const startObj = new Date(y, dm.m - 1, dm.d, sH, sM, 0);
         const endObj = new Date(y, dm.m - 1, dm.d, eH, eM, 0);
         
@@ -739,7 +773,9 @@ function parseScheduleV92(text) {
 }
 
 function extractTimeFromLine(line) {
+  // 1. 區段時間: 14:00-16:00, 1400-1600
   const complexTime = line.match(/(?:^|\\s|[:：\\-(])(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?\\s*[-~]\\s*(?:AM|PM\\s*)?(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?/i);
+  // 2. 單點時間: 14:00, 14點
   const singleTime = line.match(/(?:^|\\s|[:：\\-(])(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?(?:$|\\s|點)/i);
   
   if (complexTime) {
@@ -756,6 +792,7 @@ function extractTimeFromLine(line) {
      return { found: true, startH: sh, startM: sm, endH: eh, endM: em, raw: complexTime[0] };
   } else if (singleTime && !line.match(/[-~]/)) {
      let val = parseInt(singleTime[1].replace(":", ""));
+     // 排除年份
      if (val < 2400 && (val > 2035 || val < 2020)) {
          let h=0, m=0;
          if (singleTime[1].includes(":") || singleTime[1].length === 4) {
@@ -826,7 +863,7 @@ function performDailyMaintenance(ss, sheet) {
   }
 }
 
-// [v8.2] 訊息長度防護
+// 訊息長度防護 (Truncate message)
 function replyLine(replyToken, text) {
   if (text.length > 4000) {
     text = text.substring(0, 4000) + "...(內容過長已截斷)";

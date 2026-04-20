@@ -1,923 +1,286 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>時光秘書 - 自動化行程助理產生器</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LINE 貼圖批次處理器（網頁版）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-800">
-
-    <header class="bg-indigo-600 text-white p-6 shadow-md">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold"><i class="fa-solid fa-robot mr-2"></i>時光秘書 (Chrono-Secretary)</h1>
-                <p class="text-indigo-100 text-sm mt-1">v10.0 終極完整版</p>
-            </div>
-            <div class="text-3xl opacity-20"><i class="fa-regular fa-calendar-check"></i></div>
-        </div>
+<body class="bg-slate-100 text-slate-800">
+  <main class="max-w-5xl mx-auto p-6 space-y-6">
+    <header class="bg-white p-6 rounded-xl shadow-sm border">
+      <h1 class="text-2xl font-bold">LINE 貼圖批次處理器（網頁版）</h1>
+      <p class="text-sm text-slate-600 mt-2">支援一次上傳多張圖，處理流程：去白邊 → 去背景（白色轉透明）→ 等比例置中到 370×320 → 檔名改成「前綴 + 圖中文字」。</p>
     </header>
 
-    <main class="max-w-4xl mx-auto p-6 space-y-8">
+    <section class="bg-white p-6 rounded-xl shadow-sm border space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">檔名前綴（上傳文字）</label>
+        <input id="prefix" type="text" placeholder="例如：角色A_" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-400 outline-none" />
+      </div>
 
-        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">👑 v10.0 終極完整版</h2>
-            <p class="text-gray-600 leading-relaxed mb-4">
-                這是集大成的版本，整合了過去所有修正需求，確保判斷邏輯最為嚴謹全面。
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                <ul class="list-disc list-inside space-y-2">
-                    <li>✅ <b>全格式支援：</b>表格、列表、長文、聊天記錄複製。</li>
-                    <li>✅ <b>精準時間：</b>支援晚間(PM)、跨行時間、緊湊時間格式。</li>
-                    <li>✅ <b>民國年修復：</b>完美支援 115年 等民國紀年，防止斷詞錯誤。</li>
-                    <li>✅ <b>智慧內容：</b>自動繼承標題、自動抓取多行地點。</li>
-                </ul>
-                <ul class="list-disc list-inside space-y-2">
-                    <li>✅ <b>指令系統：</b>查詢 (1/20)、刪除 (刪除 1/20)、HELP。</li>
-                    <li>✅ <b>重複防呆：</b>完全相同的行程自動略過。</li>
-                    <li>✅ <b>訊息防爆：</b>自動截斷過長訊息，避免 Error 400。</li>
-                    <li>✅ <b>標題淨化：</b>自動移除 (六)、日 等殘字。</li>
-                </ul>
-            </div>
-        </section>
+      <div class="grid md:grid-cols-2 gap-4">
+        <label class="block">
+          <span class="block text-sm font-medium mb-1">上傳圖片（可多選）</span>
+          <input id="fileInput" type="file" accept="image/*" multiple class="block w-full text-sm" />
+        </label>
+        <label class="block">
+          <span class="block text-sm font-medium mb-1">或上傳整個資料夾（Chrome/Edge）</span>
+          <input id="folderInput" type="file" accept="image/*" webkitdirectory directory multiple class="block w-full text-sm" />
+        </label>
+      </div>
 
-        <!-- 步驟 1: LINE 設定 -->
-        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">1</div>
-                <h2 class="text-xl font-bold text-gray-800">建立 LINE 官方帳號與取得 Token</h2>
-            </div>
-            <div class="pl-10 space-y-6 text-sm text-gray-600">
-                <div>
-                    <h3 class="font-bold text-indigo-700 mb-2"><i class="fa-solid fa-key mr-1"></i> 取得 Channel Access Token</h3>
-                    <ul class="list-decimal ml-5 space-y-2">
-                        <li>前往 <a href="https://developers.line.biz/zh-hant/" target="_blank" class="text-indigo-600 hover:underline font-bold">LINE Developers Console</a>。</li>
-                        <li>在 <b>Messaging API</b> 分頁最下方產生 Token。</li>
-                        <li>記得關閉 <b>Auto-reply messages (自動回應)</b>。</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="mt-6 pl-10 border-t pt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Channel Access Token：</label>
-                <input type="text" id="inputToken" placeholder="例如：eyJhbGciOiJIUzI1NiJ9..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-            </div>
-        </section>
+      <div class="grid md:grid-cols-3 gap-4">
+        <label class="text-sm">
+          <span class="block mb-1">白底去背閾值（0-255）</span>
+          <input id="threshold" type="number" value="245" min="0" max="255" class="w-full border rounded-lg p-2" />
+        </label>
+        <label class="text-sm flex items-center gap-2 mt-6">
+          <input id="useOCR" type="checkbox" checked />
+          <span>啟用 OCR（中文+英文）</span>
+        </label>
+      </div>
 
-        <!-- 步驟 2: Google Sheet 設定 -->
-        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">2</div>
-                <h2 class="text-xl font-bold text-gray-800">準備 Google Sheet</h2>
-            </div>
-            <div class="pl-10 space-y-3 text-sm text-gray-600">
-                <p>1.建立一個新的 <a href="https://sheets.new" target="_blank" class="text-indigo-600 hover:underline">Google Sheet</a>。</p>
-                <p>2.複製網址列中的 ID。</p>
-            </div>
-            <div class="mt-4 pl-10">
-                <label class="block text-sm font-medium text-gray-700 mb-1">貼上您的 Google Sheet ID：</label>
-                <input type="text" id="inputSheetId" placeholder="例如：1qo5L0zcjQweI7xV8cqE-3BByS0PMq-d6aAVfQzs20bo" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
-            </div>
-        </section>
+      <div class="flex flex-wrap gap-3">
+        <button id="processBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg">開始處理</button>
+        <button id="zipBtn" disabled class="bg-emerald-600 disabled:bg-emerald-300 text-white px-5 py-2 rounded-lg">下載全部 ZIP</button>
+      </div>
 
-        <!-- 步驟 3: 設定提醒通知 -->
-        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">3</div>
-                <h2 class="text-xl font-bold text-gray-800">設定提醒通知時間 (可選)</h2>
-            </div>
-            <div class="pl-10 text-sm text-gray-600">
-                <p class="mb-4">除了基本的 1 小時前通知，您可以在此增加額外的提醒時間。</p>
-                
-                <div class="space-y-4">
-                    <div class="flex items-center p-3 bg-gray-100 rounded border border-gray-300">
-                        <i class="fa-solid fa-lock text-gray-400 mr-3"></i>
-                        <span class="font-bold text-gray-700 w-24">基本提醒</span>
-                        <span class="text-indigo-600 font-bold bg-indigo-100 px-2 py-1 rounded text-xs">前 1 小時</span>
-                    </div>
+      <p id="status" class="text-sm text-slate-600">尚未開始。</p>
+    </section>
 
-                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-indigo-400 transition">
-                        <i class="fa-regular fa-bell text-indigo-500 mr-3"></i>
-                        <span class="font-bold text-gray-700 w-24">額外提醒 1</span>
-                        <span class="mr-2 text-gray-500 text-xs">前</span>
-                        <input type="number" id="rem1_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-indigo-500 outline-none">
-                        <select id="rem1_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
-                            <option value="1">分鐘</option>
-                            <option value="60">小時</option>
-                            <option value="1440">天</option>
-                        </select>
-                    </div>
+    <section class="bg-white p-6 rounded-xl shadow-sm border">
+      <h2 class="font-bold mb-3">處理結果</h2>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead>
+            <tr class="border-b bg-slate-50">
+              <th class="text-left p-2">原始檔名</th>
+              <th class="text-left p-2">新檔名</th>
+              <th class="text-left p-2">預覽</th>
+              <th class="text-left p-2">下載</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
-                    <div class="flex items-center p-3 bg-white rounded border border-gray-300 hover:border-indigo-400 transition">
-                        <i class="fa-regular fa-bell text-indigo-500 mr-3"></i>
-                        <span class="font-bold text-gray-700 w-24">額外提醒 2</span>
-                        <span class="mr-2 text-gray-500 text-xs">前</span>
-                        <input type="number" id="rem2_val" placeholder="0" class="w-20 p-1 border border-gray-300 rounded text-center focus:ring-1 focus:ring-indigo-500 outline-none">
-                        <select id="rem2_unit" class="ml-2 p-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
-                            <option value="1">分鐘</option>
-                            <option value="60">小時</option>
-                            <option value="1440">天</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </section>
+  <script>
+    const TARGET_W = 370;
+    const TARGET_H = 320;
+    const outputFiles = [];
 
-        <!-- 產生程式碼按鈕 -->
-        <section class="bg-indigo-50 p-6 rounded-lg shadow-sm border border-indigo-200 text-center">
-            <h2 class="text-xl font-bold text-indigo-800 mb-2">產生您的專屬程式碼</h2>
-            <button onclick="generateCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
-                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>一鍵產生代碼
-            </button>
-        </section>
+    const fileInput = document.getElementById('fileInput');
+    const folderInput = document.getElementById('folderInput');
+    const prefixInput = document.getElementById('prefix');
+    const thresholdInput = document.getElementById('threshold');
+    const useOCRInput = document.getElementById('useOCR');
+    const processBtn = document.getElementById('processBtn');
+    const zipBtn = document.getElementById('zipBtn');
+    const statusEl = document.getElementById('status');
+    const resultBody = document.getElementById('resultBody');
 
-        <!-- 結果顯示區 -->
-        <section id="resultSection" class="hidden bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-500">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-bold text-gray-800">您的 GAS 程式碼 (v10.0)</h3>
-                <button onclick="copyCode()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded border border-gray-300 transition flex items-center">
-                    <i class="fa-regular fa-copy mr-2"></i>複製代碼
-                </button>
-            </div>
-            <textarea id="outputCode" readonly class="w-full h-64 p-3 bg-gray-900 text-green-400 font-mono text-xs rounded shadow-inner focus:outline-none resize-y"></textarea>
-            <p id="copyStatus" class="text-green-600 text-sm mt-2 hidden text-right"><i class="fa-solid fa-check mr-1"></i>已複製到剪貼簿！</p>
-        </section>
-
-        <!-- 步驟 4: GAS 部署 -->
-        <section class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center mb-4">
-                <div class="step-number" style="width: 2rem; height: 2rem; background-color: #4f46e5; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 0.75rem;">4</div>
-                <h2 class="text-xl font-bold text-gray-800">部署 Google Apps Script</h2>
-            </div>
-            <div class="pl-10 space-y-4 text-sm text-gray-600">
-                <ol class="list-decimal list-outside ml-4 space-y-3">
-                    <li>前往 Google Sheet > <b>擴充功能</b> > <b>Apps Script</b>，貼上代碼。</li>
-                    <li>
-                        <span class="font-bold text-red-600">開啟 Drive API v2 (服務 > + > Drive API > v2)。</span>
-                    </li>
-                    <li>
-                        執行 <code>initialSetup</code> 函式並完成授權。
-                    </li>
-                    <li class="bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
-                        <span class="font-bold text-yellow-800">【非常重要】建立新版本：</span>
-                        <br>每次更新程式碼後，一定要點擊 <b>部署</b> > <b>管理部署</b> > 點擊筆圖示 > 版本選擇 <b>「新版本」</b> > <b>部署</b>。
-                    </li>
-                    <li>
-                        <b>設定觸發器：</b>
-                        <ul class="list-disc ml-5 mt-1 text-gray-500">
-                            <li>新增觸發條件：<code>checkReminders</code> / 時間驅動 / 分鐘計時器 / <b>每 15 分鐘</b>。</li>
-                        </ul>
-                    </li>
-                </ol>
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="bg-gray-100 text-center p-6 text-sm text-gray-500 mt-8">
-        <p>&copy; 2026 時光秘書專案</p>
-    </footer>
-
-    <script>
-        const gasTemplate = `/**
- * 專案名稱：時光秘書 (Chrono-Secretary) v10.0 (終極完整版)
- * 功能：智慧解析 LINE 訊息 -> Google Sheet -> LINE 通知
- * 版本歷史：整合了 v1.0 至 v9.2 所有修正
- * 1. 格式支援：OCR圖片、表格、文字、列表
- * 2. 時間判讀：晚間修正、跨行搜索、格式自動修復
- * 3. 日期判讀：民國年(115年)修復、月份情境感知
- * 4. 內容處理：全域標題繼承、多行地點合併、聊天記錄淨化
- * 5. 系統功能：查詢、刪除、HELP、重複防呆、訊息防爆
- */
-
-// ================= 設定區 (由網頁產生器自動填入) =================
-const CHANNEL_ACCESS_TOKEN = '{{TOKEN}}'; 
-const SHEET_ID = '{{SHEET_ID}}'; 
-const CALENDAR_ID = 'primary'; 
-const SHEET_NAME = '行程記錄'; 
-const HISTORY_SHEET_NAME = '歷史封存';
-
-// [重要] 提醒時間設定
-const REMINDER_OFFSETS = {{REMINDER_ARRAY}}; 
-
-function doGet(e) { return ContentService.createTextOutput("服務正常運作中 (v10.0 終極版)！"); }
-
-function initialSetup() {
-  const user = Session.getActiveUser().getEmail();
-  Logger.log(\`使用者 \${user} 檢查權限...\`);
-  try {
-    const ss = SpreadsheetApp.openById(SHEET_ID);
-    if (!ss.getSheetByName(HISTORY_SHEET_NAME)) {
-      ss.insertSheet(HISTORY_SHEET_NAME).appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "封存時間"]);
+    function sanitizeFilename(text) {
+      return text
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^\w\-\u4e00-\u9fff]/g, '')
+        .slice(0, 60);
     }
-    Logger.log("✅ 試算表權限 OK");
-  } catch (e) { Logger.log("❌ 試算表錯誤: " + e.message); }
-  try { CalendarApp.getCalendarById(CALENDAR_ID); Logger.log("✅ 日曆權限 OK"); } catch (e) { Logger.log("❌ 日曆錯誤: " + e.message); }
-  try { 
-    const tempFile = DriveApp.createFile("temp_auth_check.txt", "Auth Check"); 
-    tempFile.setTrashed(true); Logger.log("✅ Drive 寫入權限 OK"); 
-  } catch (e) { Logger.log("❌ Drive 寫入權限失敗: " + e.message); }
-  Logger.log("🎉 權限檢查完成！請進行部署。");
-}
 
-function doPost(e) {
-  if (!e || !e.postData) return;
-  const msgObj = JSON.parse(e.postData.contents);
-  if (!msgObj.events || msgObj.events.length === 0) return;
-  const event = msgObj.events[0];
-  const replyToken = event.replyToken;
-  const userId = event.source.userId;
-  
-  if (event.type === 'message') {
-    let userMessage = "";
-    
-    if (event.message.type === 'image') {
-      try {
-        replyLine(replyToken, "🔍 收到圖片，正在進行 AI 辨識與整理... (請稍候)");
-      } catch (e) { Logger.log("Reply failed: " + e.message); }
-      
-      try {
-        userMessage = handleImageOCR(event.message.id);
-        if (!userMessage.trim()) { 
-          pushLineMessage(userId, "❌ 圖片辨識失敗，無法讀取文字。"); 
-          return; 
+    async function fileToImageData(file) {
+      const bitmap = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(bitmap, 0, 0);
+      return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    function trimWhiteBorder(imageData, threshold = 245) {
+      const { data, width, height } = imageData;
+      let left = width, top = height, right = -1, bottom = -1;
+
+      const isWhite = (r, g, b, a) => a === 0 || (r >= threshold && g >= threshold && b >= threshold);
+
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const idx = (y * width + x) * 4;
+          const r = data[idx], g = data[idx + 1], b = data[idx + 2], a = data[idx + 3];
+          if (!isWhite(r, g, b, a)) {
+            left = Math.min(left, x);
+            top = Math.min(top, y);
+            right = Math.max(right, x);
+            bottom = Math.max(bottom, y);
+          }
         }
-      } catch (err) {
-        pushLineMessage(userId, "❌ 處理錯誤：" + err.message);
+      }
+
+      if (right === -1) return imageData;
+
+      const tw = right - left + 1;
+      const th = bottom - top + 1;
+      const out = new ImageData(tw, th);
+
+      for (let y = 0; y < th; y++) {
+        for (let x = 0; x < tw; x++) {
+          const srcIdx = ((y + top) * width + (x + left)) * 4;
+          const dstIdx = (y * tw + x) * 4;
+          out.data[dstIdx] = data[srcIdx];
+          out.data[dstIdx + 1] = data[srcIdx + 1];
+          out.data[dstIdx + 2] = data[srcIdx + 2];
+          out.data[dstIdx + 3] = data[srcIdx + 3];
+        }
+      }
+      return out;
+    }
+
+    function removeWhiteBackground(imageData, threshold = 245) {
+      const out = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+      for (let i = 0; i < out.data.length; i += 4) {
+        const r = out.data[i], g = out.data[i + 1], b = out.data[i + 2];
+        if (r >= threshold && g >= threshold && b >= threshold) {
+          out.data[i + 3] = 0;
+        }
+      }
+      return out;
+    }
+
+    async function ocrTextFromImageData(imageData) {
+      const canvas = document.createElement('canvas');
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      canvas.getContext('2d').putImageData(imageData, 0, 0);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const result = await Tesseract.recognize(blob, 'chi_tra+eng');
+      return result.data.text || '';
+    }
+
+    async function fitToLineStickerBlob(imageData) {
+      const srcCanvas = document.createElement('canvas');
+      srcCanvas.width = imageData.width;
+      srcCanvas.height = imageData.height;
+      srcCanvas.getContext('2d').putImageData(imageData, 0, 0);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = TARGET_W;
+      canvas.height = TARGET_H;
+      const ctx = canvas.getContext('2d');
+
+      const scale = Math.min(TARGET_W / imageData.width, TARGET_H / imageData.height);
+      const nw = Math.max(1, Math.floor(imageData.width * scale));
+      const nh = Math.max(1, Math.floor(imageData.height * scale));
+      const x = Math.floor((TARGET_W - nw) / 2);
+      const y = Math.floor((TARGET_H - nh) / 2);
+
+      ctx.clearRect(0, 0, TARGET_W, TARGET_H);
+      ctx.drawImage(srcCanvas, 0, 0, imageData.width, imageData.height, x, y, nw, nh);
+
+      return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    }
+
+    function pickFiles() {
+      const files = [...fileInput.files, ...folderInput.files].filter(f => f.type.startsWith('image/'));
+      const dedup = new Map(files.map(f => [`${f.name}-${f.size}-${f.lastModified}`, f]));
+      return [...dedup.values()];
+    }
+
+    function uniqueName(baseName, used) {
+      if (!used.has(baseName)) {
+        used.add(baseName);
+        return baseName;
+      }
+      let i = 2;
+      while (used.has(`${baseName}_${i}`)) i++;
+      const name = `${baseName}_${i}`;
+      used.add(name);
+      return name;
+    }
+
+    function addResultRow(originalName, newName, blob) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b';
+
+      const previewUrl = URL.createObjectURL(blob);
+      const td1 = `<td class="p-2">${originalName}</td>`;
+      const td2 = `<td class="p-2">${newName}.png</td>`;
+      const td3 = `<td class="p-2"><img src="${previewUrl}" class="h-20 w-auto border rounded" /></td>`;
+      const td4 = `<td class="p-2"><a href="${previewUrl}" download="${newName}.png" class="text-indigo-600 underline">下載</a></td>`;
+
+      tr.innerHTML = td1 + td2 + td3 + td4;
+      resultBody.appendChild(tr);
+    }
+
+    processBtn.addEventListener('click', async () => {
+      const files = pickFiles();
+      const prefix = sanitizeFilename(prefixInput.value || '');
+      const threshold = Number(thresholdInput.value || 245);
+      const useOCR = useOCRInput.checked;
+
+      if (!files.length) {
+        alert('請先上傳至少一張圖片。');
         return;
       }
-    } else if (event.message.type === 'text') {
-      userMessage = event.message.text;
-      
-      // 指令檢查 (HELP/查詢/刪除)
-      if (handleUserCommand(userMessage, replyToken, userId)) {
-        return; 
+
+      processBtn.disabled = true;
+      zipBtn.disabled = true;
+      outputFiles.length = 0;
+      resultBody.innerHTML = '';
+      statusEl.textContent = `開始處理，共 ${files.length} 張...`;
+
+      const usedNames = new Set();
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        statusEl.textContent = `處理中 (${i + 1}/${files.length})：${file.name}`;
+
+        try {
+          const raw = await fileToImageData(file);
+          const trimmed = trimWhiteBorder(raw, threshold);
+          const noBg = removeWhiteBackground(trimmed, threshold);
+
+          let ocrText = '';
+          if (useOCR) {
+            ocrText = sanitizeFilename(await ocrTextFromImageData(trimmed));
+          }
+          if (!ocrText) ocrText = `image_${String(i + 1).padStart(3, '0')}`;
+
+          const finalName = uniqueName(sanitizeFilename(`${prefix}${ocrText}`) || `image_${String(i + 1).padStart(3, '0')}`, usedNames);
+          const pngBlob = await fitToLineStickerBlob(noBg);
+
+          outputFiles.push({ name: `${finalName}.png`, blob: pngBlob });
+          addResultRow(file.name, finalName, pngBlob);
+        } catch (err) {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b bg-rose-50';
+          tr.innerHTML = `<td class="p-2">${file.name}</td><td class="p-2 text-rose-700" colspan="3">處理失敗：${err.message || err}</td>`;
+          resultBody.appendChild(tr);
+        }
       }
 
-    } else { return; }
-
-    if (userMessage) {
-      try {
-        // 1. 聊天記錄淨化
-        const cleanMessage = cleanChatLog(userMessage);
-        // 2. 終極解析
-        const result = parseScheduleUltimate(cleanMessage); 
-        
-        if (result.status === 'error') {
-           if (event.message.type === 'image') { pushLineMessage(userId, "❌ " + result.message); }
-           else { replyLine(replyToken, "❌ " + result.message); }
-           return;
-        }
-
-        const parsedData = result.data;
-        if (parsedData.length > 0) {
-          const batchResult = processEventsBatch(userId, parsedData);
-          
-          let replyMsg = "";
-          
-          if (batchResult.added.length > 0) {
-             replyMsg += "✅ 行程已安排並排序：\\n";
-             batchResult.added.forEach(data => {
-                const startStr = Utilities.formatDate(data.startObj, Session.getScriptTimeZone(), "MM/dd HH:mm");
-                const endStr = Utilities.formatDate(data.endObj, Session.getScriptTimeZone(), "HH:mm");
-                replyMsg += \`----------------\\n📅 \${startStr} - \${endStr}\\n📝 \${data.title}\\n📍 \${data.location || '線上/無地點'}\\n\`;
-             });
-          }
-
-          if (batchResult.ignored.length > 0) {
-             replyMsg += \`\\n⚠️ 發現 \${batchResult.ignored.length} 筆重複行程 (已自動略過)：\\n\`;
-             batchResult.ignored.forEach(title => {
-                replyMsg += \`• \${title}\\n\`;
-             });
-          }
-          
-          if (batchResult.added.length > 0) {
-            const reminderText = REMINDER_OFFSETS.map(min => {
-              if (min >= 1440) return \`前 \${Math.floor(min/1440)} 天\`;
-              if (min >= 60) return \`前 \${(min/60).toFixed(1).replace('.0','')} 小時\`;
-              return \`前 \${min} 分鐘\`;
-            }).join("、");
-            replyMsg += \`\\n🔔 機器人將在活動 \${reminderText} 通知您。\`;
-          } else if (batchResult.ignored.length > 0 && batchResult.added.length === 0) {
-            replyMsg += "\\n(所有行程均已存在，無需新增)";
-          }
-          
-          if (event.message.type === 'image') { 
-            pushLineMessage(userId, replyMsg); 
-          } else { 
-            replyLine(replyToken, replyMsg); 
-          }
-        } else {
-           const msg = "無法辨識行程。\\n請輸入「HELP」查看教學，或確認輸入含有日期(如1/20)或月份標題。";
-           if (event.message.type === 'image') pushLineMessage(userId, msg);
-           else replyLine(replyToken, msg);
-        }
-      } catch (err) {
-        Logger.log(err);
-        const errMsg = "❌ 系統錯誤：" + err.message;
-        if (event.message.type === 'image') pushLineMessage(userId, errMsg);
-        else replyLine(replyToken, errMsg);
-      }
-    }
-  }
-}
-
-// ---------------- 核心功能區 ----------------
-
-// 聊天記錄淨化：移除行首的 11:35 或 上午 11:35 格式
-function cleanChatLog(text) {
-  const lines = text.split('\\n');
-  const cleanedLines = lines.map(line => {
-    return line.replace(/^(上午|下午)?\s*(\d{1,2}:\d{2})\s+(?=\S)/, "");
-  });
-  return cleanedLines.join('\\n');
-}
-
-// 使用者指令處理
-function handleUserCommand(text, replyToken, userId) {
-  const lowerText = text.toLowerCase().trim();
-
-  // HELP
-  if (lowerText === 'help' || lowerText === '功能' || lowerText === '指令' || lowerText === '說明' || lowerText === '怎麼用' || lowerText === '教學') {
-    const helpMsg = "🤖 時光秘書使用說明 v10.0：\\n\\n" +
-                    "1️⃣ 【新增行程】\\n直接貼上文字或圖片 (支援表格、聊天記錄)。\\n範例：「1/20 晚上7:30 開會」\\n\\n" +
-                    "2️⃣ 【查詢行程】\\n" +
-                    "• 查特定日期：「1/20」\\n" +
-                    "• 查整月份：「1月」\\n\\n" +
-                    "3️⃣ 【刪除行程】\\n" +
-                    "• 刪除：「刪除 1/20 開會」";
-    replyLine(replyToken, helpMsg);
-    return true;
-  }
-
-  // 刪除
-  if (lowerText.startsWith("刪除") || lowerText.startsWith("取消")) {
-     const delResult = deleteScheduleByCommand(text);
-     replyLine(replyToken, delResult);
-     return true;
-  }
-
-  // 查詢判斷
-  const isExplicitQuery = text.match(/(查詢|行程|安排|有什麼|幾號)/);
-  const isShortDate = text.length < 10 && text.match(/(\\d{1,2}[/-]\\d{1,2}|\\d{1,2}月)/);
-  const isKeyword = text.match(/^(今天|明天|後天)$/);
-
-  if (isExplicitQuery || isShortDate || isKeyword) {
-    const today = new Date();
-    let targetDate = null;
-    let queryMode = 'day'; 
-
-    if (text.includes("今天")) {
-      targetDate = today;
-    } else if (text.includes("明天")) {
-      targetDate = new Date(today); targetDate.setDate(today.getDate() + 1);
-    } else if (text.includes("後天")) {
-      targetDate = new Date(today); targetDate.setDate(today.getDate() + 2);
-    } else {
-      const dateMatch = text.match(/(\\d{1,2})\\s*[-/月]\\s*(\\d{1,2})/);
-      const monthMatch = text.match(/(\\d{1,2})\\s*月/);
-      const chiMonthMatch = text.match(/([一二三四五六七八九十]+)\\s*月/);
-
-      if (dateMatch) {
-         const m = parseInt(dateMatch[1]);
-         const d = parseInt(dateMatch[2]);
-         let y = today.getFullYear();
-         if (today.getMonth() + 1 >= 11 && m <= 2) y++;
-         targetDate = new Date(y, m - 1, d);
-      } else if (monthMatch && !text.includes("日") && !text.includes("/")) {
-         const m = parseInt(monthMatch[1]);
-         let y = today.getFullYear();
-         if (today.getMonth() + 1 >= 11 && m <= 2) y++;
-         targetDate = new Date(y, m - 1, 1);
-         queryMode = 'month';
-      } else if (chiMonthMatch && !text.includes("日")) {
-         const map = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'十一':11,'十二':12};
-         const m = map[chiMonthMatch[1]];
-         if (m) {
-             let y = today.getFullYear();
-             if (today.getMonth() + 1 >= 11 && m <= 2) y++;
-             targetDate = new Date(y, m - 1, 1);
-             queryMode = 'month';
-         }
-      }
-    }
-
-    if (targetDate) {
-      const result = searchSchedule(targetDate, queryMode);
-      replyLine(replyToken, result);
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function deleteScheduleByCommand(text) {
-  const today = new Date();
-  const dateMatch = text.match(/(\\d{1,2})\\s*[-/月]\\s*(\\d{1,2})/);
-  
-  if (!dateMatch) {
-     return "❌ 刪除失敗：請指定日期，例如「刪除 1/20」或「刪除 1/20 開會」。";
-  }
-
-  const m = parseInt(dateMatch[1]);
-  const d = parseInt(dateMatch[2]);
-  let y = today.getFullYear();
-  if (today.getMonth() + 1 >= 11 && m <= 2) y++;
-  const targetDate = new Date(y, m - 1, d);
-  
-  let keyword = text.replace(/刪除|取消/g, "").replace(dateMatch[0], "").replace("日", "").trim();
-
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) return "❌ 找不到行程表。";
-
-  const data = sheet.getDataRange().getValues();
-  let deletedCount = 0;
-  let deletedInfo = "";
-
-  for (let i = data.length - 1; i >= 1; i--) {
-     const rowDate = new Date(data[i][4]);
-     if (isNaN(rowDate.getTime())) continue;
-
-     if (rowDate.getMonth() === targetDate.getMonth() && 
-         rowDate.getDate() === targetDate.getDate() && 
-         rowDate.getFullYear() === targetDate.getFullYear()) {
-         
-         const rowTitle = String(data[i][5]);
-         if (keyword === "" || rowTitle.includes(keyword)) {
-             sheet.deleteRow(i + 1);
-             deletedCount++;
-             deletedInfo += \`• \${rowTitle}\\n\`;
-         }
-     }
-  }
-
-  if (deletedCount > 0) {
-     return \`🗑️ 已刪除 \${m}/\${d} 的 \${deletedCount} 筆行程：\\n\${deletedInfo}\`;
-  } else {
-     return \`❌ 找不到 \${m}/\${d} \${keyword ? "含有「"+keyword+"」的" : ""}行程。\`;
-  }
-}
-
-function searchSchedule(dateObj, mode) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) return "❌ 尚未建立行程表";
-
-  const data = sheet.getDataRange().getValues();
-  const results = [];
-  const targetMonth = dateObj.getMonth();
-  const targetDay = dateObj.getDate();
-  const targetYear = dateObj.getFullYear();
-
-  for (let i = 1; i < data.length; i++) {
-    const rowDate = new Date(data[i][4]);
-    if (isNaN(rowDate.getTime())) continue;
-
-    let match = false;
-    if (mode === 'month') {
-      if (rowDate.getMonth() === targetMonth && rowDate.getFullYear() === targetYear) match = true;
-    } else {
-      if (rowDate.getMonth() === targetMonth && rowDate.getDate() === targetDay && rowDate.getFullYear() === targetYear) match = true;
-    }
-
-    if (match) {
-      const timeStr = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "HH:mm");
-      const dateStr = Utilities.formatDate(rowDate, Session.getScriptTimeZone(), "MM/dd");
-      const title = data[i][5];
-      const loc = data[i][6] ? \`(\${data[i][6]})\` : "";
-      results.push({ date: dateStr, time: timeStr, title: title, loc: loc, sortTime: rowDate.getTime() });
-    }
-  }
-
-  if (results.length === 0) {
-    const modeStr = (mode === 'month') ? (targetMonth + 1) + "月" : (targetMonth + 1) + "/" + targetDay;
-    return \`📅 \${modeStr} 目前沒有行程喔！\`;
-  }
-
-  results.sort((a, b) => a.sortTime - b.sortTime);
-
-  let msg = (mode === 'month') ? \`📅 \${targetMonth + 1}月 行程一覽：\\n\` : \`📅 \${targetMonth + 1}/\${targetDay} 行程：\\n\`;
-  results.forEach(item => {
-    msg += \`----------------\\n[\${item.date} \${item.time}] \${item.title} \${item.loc}\\n\`;
-  });
-
-  return msg;
-}
-
-function processEventsBatch(userId, newEvents) {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  let sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "封存時間"]);
-    sheet.setFrozenRows(1);
-  }
-
-  const existingData = sheet.getDataRange().getValues();
-  const existingSignatures = new Set();
-  
-  for (let i = 1; i < existingData.length; i++) {
-    const row = existingData[i];
-    let rowTime = row[4];
-    let rowTitle = row[5];
-    if (!(rowTime instanceof Date)) { rowTime = new Date(rowTime); }
-    
-    if (!isNaN(rowTime.getTime())) {
-       const timeStr = Utilities.formatDate(rowTime, Session.getScriptTimeZone(), "yyyy-MM-dd_HH:mm");
-       existingSignatures.add(\`\${timeStr}_\${rowTitle}\`);
-    }
-  }
-
-  const rowsToAdd = [];
-  const addedEvents = [];
-  const ignoredTitles = [];
-
-  newEvents.forEach(event => {
-    const eventTimeStr = Utilities.formatDate(event.startObj, Session.getScriptTimeZone(), "yyyy-MM-dd_HH:mm");
-    const signature = \`\${eventTimeStr}_\${event.title}\`;
-
-    if (existingSignatures.has(signature)) {
-      ignoredTitles.push(event.title);
-    } else {
-      rowsToAdd.push([
-        userId,
-        event.date,
-        event.timeStart,
-        event.timeEnd,
-        event.startObj,
-        event.title,
-        event.location,
-        "", 
-        new Date()
-      ]);
-      try { createCalendarEvent(event); } 
-      catch (e) { Logger.log("日曆寫入失敗: " + e.message); }
-      addedEvents.push(event);
-      existingSignatures.add(signature);
-    }
-  });
-
-  if (rowsToAdd.length > 0) {
-    const lastRow = sheet.getLastRow();
-    sheet.getRange(lastRow + 1, 1, rowsToAdd.length, rowsToAdd[0].length).setValues(rowsToAdd);
-    SpreadsheetApp.flush(); 
-    const fullRange = sheet.getDataRange();
-    if (fullRange.getNumRows() > 1) {
-       sheet.getRange(2, 1, fullRange.getNumRows() - 1, fullRange.getNumColumns()).sort({column: 5, ascending: true});
-    }
-  }
-
-  return { added: addedEvents, ignored: ignoredTitles };
-}
-
-function handleImageOCR(messageId) {
-  const url = \`https://api-data.line.me/v2/bot/message/\${messageId}/content\`;
-  const response = UrlFetchApp.fetch(url, { 'headers': { 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN } });
-  const blob = response.getBlob();
-  const resource = { title: "temp_ocr_" + new Date().getTime(), mimeType: blob.getContentType() };
-  let file, attempts = 0;
-  const maxAttempts = 3; 
-  while (attempts < maxAttempts) {
-    try { file = Drive.Files.insert(resource, blob, { ocr: true }); break; } 
-    catch (e) { 
-      attempts++; 
-      if(attempts >= maxAttempts) throw new Error("OCR 服務忙碌 (" + e.message + ")，請稍後再試。");
-      Utilities.sleep(1500); 
-    }
-  }
-  const text = DocumentApp.openById(file.id).getBody().getText();
-  try { Drive.Files.remove(file.id); } catch (e) {}
-  return text;
-}
-
-// ---------------- 解析核心 V10.0 ----------------
-function parseScheduleUltimate(text) {
-  // 1. 晚間關鍵字
-  text = text.replace(/(今晚|晚上|晚間)/g, "PM ");
-  
-  // 2. 智慧斷詞 (避開年月日號)
-  text = text.replace(/([^\d年月日號\s])(\d)/g, "$1 $2")
-             .replace(/(\d)([^\d年月日號\s:：-])/g, "$1 $2");
-
-  // 3. 符號清理
-  text = text.replace(/(\\d{4})[:](?=\\d{2})/g, "$1-")
-             .replace(/[０-９]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
-             .replace(/⋅/g, " ").replace(/[()（）【】\\[\\]]/g, " ") 
-             .replace(/[\\u0000-\\u0008\\u000B-\\u001F\\u007F]/g, "") 
-             .replace(/日期[:：]/g, "").replace(/時間[:：]/g, ""); 
-             
-  text = text.replace(/上午/g, "AM ").replace(/下午/g, "PM ")
-             .replace(/(AM|PM)[:：]?/gi, "$1 ");
-
-  const lines = text.split('\\n').map(l => l.trim()).filter(l => l);
-  const currentYear = new Date().getFullYear();
-  const currentRealMonth = new Date().getMonth() + 1; 
-
-  const datePattern = /(?:^|[^\\d:：])(?:(\\d{2,4})\s*[./年-])?\s*(\\d{1,2})\s*[-./月]\s*(\\d{1,2})\s*([日號])?/g; 
-  const monthHeaderPattern = /^(\\d{1,2})\\s*[月]/; 
-  const dayOnlyPattern = /^(\\d{1,2})\\s*[日號](?!\\d)/; 
-
-  let defaultTitle = "";
-  let defaultTime = { startH: 9, startM: 0, endH: 10, endM: 0, valid: false };
-  let contextMonth = null; 
-
-  const results = [];
-  
-  for (let i = 0; i < lines.length; i++) {
-     let line = lines[i];
-     
-     // 月份標題偵測 (更新上下文)
-     const monthHeader = line.match(monthHeaderPattern);
-     if (monthHeader) {
-        contextMonth = parseInt(monthHeader[1]);
-        if (line.length < 10) continue; 
-     }
-
-     let dateMatches = [];
-     let match;
-     
-     // 抓取標準日期 (含民國年)
-     datePattern.lastIndex = 0;
-     while ((match = datePattern.exec(line)) !== null) {
-        const pureNumber = match[0].trim().match(/^(\\d{3,4})$/);
-        let yCandidate = parseInt(match[1]);
-        let isROC = false;
-        if (yCandidate < 1000) { yCandidate += 1911; isROC = true; }
-        
-        // 嚴格年限: 民國或 2020-2035
-        if (!pureNumber && (isROC || !yCandidate || (yCandidate >= 2020 && yCandidate <= 2035))) {
-           dateMatches.push({ m: parseInt(match[2]), d: parseInt(match[3]), src: match[0], y: yCandidate });
-           contextMonth = parseInt(match[2]); 
-        }
-     }
-
-     // 抓取簡寫日期 (需有 ContextMonth)
-     if (dateMatches.length === 0 && contextMonth) {
-        const dayMatch = line.match(dayOnlyPattern);
-        if (dayMatch) {
-           dateMatches.push({ m: contextMonth, d: parseInt(dayMatch[1]), src: dayMatch[0], y: currentYear });
-        }
-     }
-
-     // 若這行沒日期 -> 嘗試提取全域資訊
-     if (dateMatches.length === 0) {
-        if (results.length === 0) {
-            const t = extractTimeFromLine(line);
-            if (t.found) { defaultTime = t; defaultTime.valid = true; line = line.replace(t.raw, ""); }
-            if (!line.match(/^(提醒|通知|公告|以下).+[:：~]$/) && !line.match(/https?:\\/\\//) && !line.match(/^(其他時間)/)) {
-               defaultTitle += line + " ";
-            }
-        }
-        continue;
-     }
-
-     // 解析當行內容
-     let localTime = extractTimeFromLine(line);
-     let contentText = line;
-     dateMatches.forEach(dm => { contentText = contentText.replace(dm.src, " "); });
-     if (localTime.found) { contentText = contentText.replace(localTime.raw, " "); }
-     if (monthHeader) contentText = contentText.replace(monthHeader[0], " ");
-
-     // 標題強力淨化
-     let localTitle = contentText.replace(/^\\s*([(*]?\\d+[.)*\\]]?|[*•-])\\s*/, "")
-                                 .replace(/https?:\\/\\/[^\\s]+/g, "")
-                                 .replace(/[週星期][一二三四五六日]/g, "") 
-                                 .replace(/\\s+[一二三四五六日]\\s*$/g, "") 
-                                 .replace(/\\s+[日號]\\s*$/g, "") 
-                                 .trim();
-
-     let localLocation = "";
-
-     // 區塊掃描 (深度時間搜索 + 地點)
-     let j = i + 1;
-     while (j < lines.length) {
-        let nextLine = lines[j];
-        
-        // 遇到下一個日期則停止
-        let nextIsDate = false;
-        if (datePattern.test(nextLine) || (contextMonth && dayOnlyPattern.test(nextLine)) || monthHeaderPattern.test(nextLine)) {
-            nextIsDate = true;
-        }
-        if (nextIsDate) break;
-
-        // 深度時間搜索：如果這行是時間，且比目前的更像 (或是區段)，就用它
-        let potentialTime = extractTimeFromLine(nextLine);
-        if (potentialTime.found) {
-             // 邏輯: 若原無時間 OR 原為單點且新為區段 -> 替換
-             if (!localTime.found || (localTime.startH === localTime.endH - 1 && potentialTime.startH !== potentialTime.endH - 1)) {
-                 localTime = potentialTime;
-             }
-             let leftOver = nextLine.replace(potentialTime.raw, "").replace(/時間[:：]/, "").trim();
-             if (leftOver) localLocation += " " + leftOver;
-             j++;
-             continue;
-        }
-
-        if (nextLine.match(/(地點|地址|位置|教室|會議室|樓|號|路|街|區|市|縣|http|大樓)/)) {
-             localLocation += " " + nextLine;
-        } else if (nextLine.match(/^(講師|費用|對象|講題)/)) {
-             localLocation += " " + nextLine; 
-        } else {
-             localLocation += " " + nextLine; 
-        }
-        j++;
-     }
-
-     // 整合資訊
-     defaultTitle = defaultTitle.trim();
-     let finalTitle = localTitle ? (defaultTitle ? defaultTitle + " (" + localTitle + ")" : localTitle) : defaultTitle || "未命名行程";
-     if (localTitle.length > 5 && !defaultTitle) finalTitle = localTitle;
-     
-     localLocation = localLocation.trim();
-
-     let sH = localTime.found ? localTime.startH : defaultTime.startH;
-     let sM = localTime.found ? localTime.startM : defaultTime.startM;
-     let eH = localTime.found ? localTime.endH : defaultTime.endH;
-     let eM = localTime.found ? localTime.endM : defaultTime.endM;
-
-     // 產生事件物件
-     dateMatches.forEach(dm => {
-        let y = dm.y || currentYear;
-        // 自動跨年：若沒指定年份 & 現在年底 & 目標年初
-        if (!dm.y && currentRealMonth >= 11 && dm.m <= 2) y++;
-        
-        // 日期物件
-        const startObj = new Date(y, dm.m - 1, dm.d, sH, sM, 0);
-        const endObj = new Date(y, dm.m - 1, dm.d, eH, eM, 0);
-        
-        const mStr = String(dm.m).padStart(2, '0');
-        const dStr = String(dm.d).padStart(2, '0');
-        const dateStr = \`\${y}-\${mStr}-\${dStr}\`;
-
-        results.push({
-          date: dateStr,
-          timeStart: \`\${String(sH).padStart(2,'0')}:\${String(sM).padStart(2,'0')}\`,
-          timeEnd: \`\${String(eH).padStart(2,'0')}:\${String(eM).padStart(2,'0')}\`,
-          startObj: startObj,
-          endObj: endObj,
-          title: finalTitle,
-          location: localLocation 
-        });
-     });
-
-     i = j - 1; 
-  }
-
-  return { status: 'success', data: results };
-}
-
-function extractTimeFromLine(line) {
-  // 1. 區段時間: 14:00-16:00, 1400-1600
-  const complexTime = line.match(/(?:^|\\s|[:：\\-(])(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?\\s*[-~]\\s*(?:AM|PM\\s*)?(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?/i);
-  // 2. 單點時間: 14:00, 14點
-  const singleTime = line.match(/(?:^|\\s|[:：\\-(])(\\d{1,2}:?\\d{2}|\\d{4})(:(\\d{2}))?(?:$|\\s|點)/i);
-  
-  if (complexTime) {
-     const parseRaw = (raw) => {
-       raw = raw.replace(":", "");
-       if (raw.length === 4) return { h: parseInt(raw.substring(0,2)), m: parseInt(raw.substring(2,4)) };
-       if (raw.length <= 2) return { h: parseInt(raw), m: 0 };
-       return { h: 9, m: 0 };
-     };
-     const s = parseRaw(complexTime[1]);
-     const e = parseRaw(complexTime[4]); 
-     let sh = s.h, sm = s.m, eh = e.h, em = e.m;
-     if (line.match(/PM/i) && sh < 12) { sh += 12; if(eh < 12) eh += 12; }
-     return { found: true, startH: sh, startM: sm, endH: eh, endM: em, raw: complexTime[0] };
-  } else if (singleTime && !line.match(/[-~]/)) {
-     let val = parseInt(singleTime[1].replace(":", ""));
-     // 排除年份
-     if (val < 2400 && (val > 2035 || val < 2020)) {
-         let h=0, m=0;
-         if (singleTime[1].includes(":") || singleTime[1].length === 4) {
-            let raw = singleTime[1].replace(":", "");
-            h = parseInt(raw.substring(0,2));
-            m = parseInt(raw.substring(2,4));
-         } else { h = parseInt(singleTime[1]); }
-         
-         if (line.match(/PM/i) && h < 12) h += 12;
-         return { found: true, startH: h, startM: m, endH: h+1, endM: m, raw: singleTime[0] };
-     }
-  }
-  return { found: false };
-}
-
-function createCalendarEvent(data) {
-  CalendarApp.getCalendarById(CALENDAR_ID).createEvent(data.title, data.startObj, data.endObj, { description: \`地點/連結: \${data.location}\\n(時光秘書)\`, location: data.location });
-}
-
-function checkReminders() {
-  const ss = SpreadsheetApp.openById(SHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) return;
-  const now = new Date();
-  if (now.getHours() === 4 && now.getMinutes() < 15) { performDailyMaintenance(ss, sheet); }
-  const dataRange = sheet.getDataRange();
-  const values = dataRange.getValues();
-  const maxReminderMin = Math.max(...REMINDER_OFFSETS);
-  const maxLookAheadTime = new Date(now.getTime() + (maxReminderMin + 60) * 60 * 1000); 
-  for (let i = 1; i < values.length; i++) {
-    const row = values[i];
-    const userId = row[0];
-    const eventTime = new Date(row[4]); 
-    const title = row[5];
-    const location = row[6];
-    let notifiedStatus = row[7] ? String(row[7]) : ""; 
-    if (eventTime > maxLookAheadTime) { break; }
-    let needUpdate = false;
-    REMINDER_OFFSETS.forEach(offsetMin => {
-      if (notifiedStatus.includes(\`|\${offsetMin}|\`)) return;
-      const timeDiffMin = (eventTime.getTime() - now.getTime()) / 60000;
-      if (timeDiffMin <= offsetMin && timeDiffMin > (offsetMin - 20)) {
-        let timeLabel = "";
-        if (offsetMin >= 1440) timeLabel = \`前 \${Math.floor(offsetMin/1440)} 天\`;
-        else if (offsetMin >= 60) timeLabel = \`前 \${(offsetMin/60).toFixed(1).replace('.0','')} 小時\`;
-        else timeLabel = \`前 \${offsetMin} 分鐘\`;
-        const msg = \`⏰ 提醒 (\${timeLabel})：活動即將開始！\\n\\n主題：\${title}\\n時間：\${Utilities.formatDate(eventTime, Session.getScriptTimeZone(), "HH:mm")}\\n地點/連結：\${location}\`;
-        pushLineMessage(userId, msg);
-        notifiedStatus += \`|\${offsetMin}|\`;
-        needUpdate = true;
-      }
+      statusEl.textContent = `完成！成功輸出 ${outputFiles.length} 張 PNG。`;
+      zipBtn.disabled = outputFiles.length === 0;
+      processBtn.disabled = false;
     });
-    if (needUpdate) { sheet.getRange(i + 1, 8).setValue(notifiedStatus); }
-  }
-}
 
-function performDailyMaintenance(ss, sheet) {
-  let historySheet = ss.getSheetByName(HISTORY_SHEET_NAME);
-  if (!historySheet) { historySheet = ss.insertSheet(HISTORY_SHEET_NAME).appendRow(["LineUserID", "日期", "開始時間", "結束時間", "完整開始時間", "主題", "地點/連結", "提醒狀態", "封存時間"]); }
-  const values = sheet.getDataRange().getValues();
-  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setHours(0,0,0,0);
-  for (let i = values.length - 1; i >= 1; i--) {
-    const eventTime = new Date(values[i][4]);
-    if (eventTime < yesterday) {
-      historySheet.appendRow([...values[i], new Date()]);
-      sheet.deleteRow(i + 1);
-    }
-  }
-}
+    zipBtn.addEventListener('click', async () => {
+      if (!outputFiles.length) return;
+      statusEl.textContent = '正在打包 ZIP...';
+      const zip = new JSZip();
+      outputFiles.forEach(f => zip.file(f.name, f.blob));
+      const blob = await zip.generateAsync({ type: 'blob' });
 
-// 訊息長度防護 (Truncate message)
-function replyLine(replyToken, text) {
-  if (text.length > 4000) {
-    text = text.substring(0, 4000) + "...(內容過長已截斷)";
-  }
-  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
-    'headers': { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
-    'method': 'post', 'payload': JSON.stringify({ replyToken: replyToken, messages: [{ type: 'text', text: text }] })
-  });
-}
-
-function pushLineMessage(userId, text) {
-  if (text.length > 4000) {
-    text = text.substring(0, 4000) + "...(內容過長已截斷)";
-  }
-  UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push', {
-    'headers': { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN },
-    'method': 'post', 'payload': JSON.stringify({ to: userId, messages: [{ type: 'text', text: text }] })
-  });
-}
-`;
-
-        function generateCode() {
-            const token = document.getElementById('inputToken').value.trim();
-            const sheetId = document.getElementById('inputSheetId').value.trim();
-            
-            let reminders = [60]; 
-            const r1Val = document.getElementById('rem1_val').value;
-            const r1Unit = document.getElementById('rem1_unit').value;
-            if (r1Val && !isNaN(r1Val) && parseInt(r1Val) > 0) { reminders.push(parseInt(r1Val) * parseInt(r1Unit)); }
-            const r2Val = document.getElementById('rem2_val').value;
-            const r2Unit = document.getElementById('rem2_unit').value;
-            if (r2Val && !isNaN(r2Val) && parseInt(r2Val) > 0) { reminders.push(parseInt(r2Val) * parseInt(r2Unit)); }
-            reminders = [...new Set(reminders)].sort((a,b) => a - b);
-            const reminderArrayStr = JSON.stringify(reminders);
-
-            if (!token || !sheetId) { alert("請先輸入 LINE Token 與 Google Sheet ID 喔！"); return; }
-
-            let finalCode = gasTemplate.replace('{{TOKEN}}', token).replace('{{SHEET_ID}}', sheetId).replace('{{REMINDER_ARRAY}}', reminderArrayStr);
-            const outputArea = document.getElementById('outputCode');
-            outputArea.value = finalCode;
-            const resultSection = document.getElementById('resultSection');
-            resultSection.classList.remove('hidden');
-            resultSection.scrollIntoView({ behavior: 'smooth' });
-            document.getElementById('copyStatus').classList.add('hidden');
-        }
-
-        function copyCode() {
-            const outputArea = document.getElementById('outputCode');
-            outputArea.select();
-            document.execCommand('copy');
-            const status = document.getElementById('copyStatus');
-            status.classList.remove('hidden');
-            setTimeout(() => status.classList.add('hidden'), 3000);
-        }
-    </script>
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'line_stickers.zip';
+      a.click();
+      statusEl.textContent = 'ZIP 下載完成。';
+    });
+  </script>
 </body>
 </html>
